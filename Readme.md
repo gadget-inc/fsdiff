@@ -32,18 +32,18 @@ To read the contents of these files, use the included `debug` tool.
 ```bash
 $ bin/debug -sum sum.zst -diff diff.zst
 
-2021/06/11 12:26:45 === Summary ===
-2021/06/11 12:26:45 created at: 1623407202
-2021/06/11 12:26:45 total entries: 4
-2021/06/11 12:26:45
-2021/06/11 12:26:45 0: path:a mode:420
-2021/06/11 12:26:45 1: path:b mode:420
-2021/06/11 12:26:45 2: path:c mode:420
-2021/06/11 12:26:45 3: path:new mode:420
-2021/06/11 12:26:45
-2021/06/11 12:26:45 === Diff ===
-2021/06/11 12:26:45 created at: 1623407202
-2021/06/11 12:26:45 total updates: 1
-2021/06/11 12:26:45
-2021/06/11 12:26:45 0: action:ADD path:new
+=== Summary ===
+created at:    1623436045
+total entries: 4
+
+0: path:a mode:420 hash:87428fc52280...
+1: path:b mode:420 hash:0263829989b6...
+2: path:c mode:420 hash:a3a5e715f0cc...
+3: path:new mode:420 hash:7aa7a5359173...
+
+=== Diff ===
+created at:    1623436045
+total updates: 1
+
+0: action:ADD path:new
 ```

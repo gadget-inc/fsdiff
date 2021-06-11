@@ -1,3 +1,5 @@
 bin/
 example/
 *.pb.go
+sum.zst
+diff.zst

@@ -28,6 +28,14 @@ type Entry struct {
 	err  error
 }
 
+func (e *Entry) toPb() *pb.FileEntry {
+	return &pb.FileEntry{
+		Path: e.path,
+		Mode: e.mode,
+		Hash: e.hash,
+	}
+}
+
 func WalkChan(dir string) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
 
@@ -105,7 +113,7 @@ func SummaryChan(path string) <-chan *Entry {
 
 		for _, entry := range summary.Entries {
 			entryChan <- &Entry{
-				path: filepath.Join(entry.RelativeDir, entry.Name),
+				path: entry.Path,
 				mode: entry.Mode,
 				hash: entry.Hash,
 				err:  nil,
@@ -153,12 +161,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				Path:   walkEntry.path,
 				Action: pb.Update_ADD,
 			})
-			sum.Entries = append(sum.Entries, &pb.FileEntry{
-				RelativeDir: filepath.Dir(walkEntry.path),
-				Name:        filepath.Base(walkEntry.path),
-				Mode:        walkEntry.mode,
-				Hash:        walkEntry.hash,
-			})
+			sum.Entries = append(sum.Entries, walkEntry.toPb())
 
 			walkEntry, walkOpen = <-walkC
 			continue
@@ -170,20 +173,9 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 					Path:   walkEntry.path,
 					Action: pb.Update_CHANGE,
 				})
-				sum.Entries = append(sum.Entries, &pb.FileEntry{
-					RelativeDir: filepath.Dir(walkEntry.path),
-					Name:        filepath.Base(walkEntry.path),
-					Mode:        walkEntry.mode,
-					Hash:        walkEntry.hash,
-				})
-			} else {
-				sum.Entries = append(sum.Entries, &pb.FileEntry{
-					RelativeDir: filepath.Dir(walkEntry.path),
-					Name:        filepath.Base(walkEntry.path),
-					Mode:        walkEntry.mode,
-					Hash:        walkEntry.hash,
-				})
 			}
+
+			sum.Entries = append(sum.Entries, walkEntry.toPb())
 
 			walkEntry, walkOpen = <-walkC
 			sumEntry, sumOpen = <-sumC
@@ -202,12 +194,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				Path:   walkEntry.path,
 				Action: pb.Update_ADD,
 			})
-			sum.Entries = append(sum.Entries, &pb.FileEntry{
-				RelativeDir: filepath.Dir(walkEntry.path),
-				Name:        filepath.Base(walkEntry.path),
-				Mode:        walkEntry.mode,
-				Hash:        walkEntry.hash,
-			})
+			sum.Entries = append(sum.Entries, walkEntry.toPb())
 
 			walkEntry, walkOpen = <-walkC
 		}

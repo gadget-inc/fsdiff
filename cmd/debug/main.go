@@ -1,9 +1,10 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
+	"fmt"
 	"log"
-	"path/filepath"
 
 	"github.com/angelini/fsdiff/pkg/diff"
 	"github.com/angelini/fsdiff/pkg/pb"
@@ -38,15 +39,15 @@ func main() {
 			log.Fatalf("read summary file %v: %v", args.sum, err)
 		}
 
-		log.Print("")
-		log.Print("=== Summary ===")
-		log.Printf("created at: %v", summary.CreatedAt)
-		log.Printf("total entries: %v", len(summary.Entries))
-		log.Print("")
+		fmt.Println("")
+		fmt.Println("=== Summary ===")
+		fmt.Printf("created at:    %v\n", summary.CreatedAt)
+		fmt.Printf("total entries: %v\n", len(summary.Entries))
+		fmt.Println("")
 
 		for i := 0; i < args.sample && i < len(summary.Entries); i++ {
 			entry := summary.Entries[i]
-			log.Printf("%v: path:%v mode:%v", i, filepath.Join(entry.RelativeDir, entry.Name), entry.Mode)
+			fmt.Printf("%v: path:%v mode:%v hash:%v...\n", i, entry.Path, entry.Mode, hex.EncodeToString(entry.Hash)[:12])
 		}
 	}
 
@@ -56,22 +57,22 @@ func main() {
 			log.Fatalf("read diff file %v: %v", args.sum, err)
 		}
 
-		log.Print("")
-		log.Print("=== Diff ===")
-		log.Printf("created at: %v", diff.CreatedAt)
-		log.Printf("total updates: %v", len(diff.Updates))
-		log.Print("")
+		fmt.Println("")
+		fmt.Println("=== Diff ===")
+		fmt.Printf("created at:    %v\n", diff.CreatedAt)
+		fmt.Printf("total updates: %v\n", len(diff.Updates))
+		fmt.Println("")
 
 		for i := 0; i < args.sample && i < len(diff.Updates); i++ {
 			update := diff.Updates[i]
 
 			switch update.Action {
 			case pb.Update_ADD:
-				log.Printf("%v: action:ADD path:%v", i, update.Path)
+				fmt.Printf("%v: action:ADD path:%v\n", i, update.Path)
 			case pb.Update_CHANGE:
-				log.Printf("%v: action:CHANGE path:%v", i, update.Path)
+				fmt.Printf("%v: action:CHANGE path:%v\n", i, update.Path)
 			case pb.Update_REMOVE:
-				log.Printf("%v: action:REMOVE path:%v", i, update.Path)
+				fmt.Printf("%v: action:REMOVE path:%v\n", i, update.Path)
 			}
 		}
 	}
