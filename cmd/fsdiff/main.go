@@ -3,11 +3,9 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/angelini/fsdiff/pkg/diff"
-	"google.golang.org/protobuf/proto"
 )
 
 type cliArgs struct {
@@ -37,28 +35,18 @@ func parseArgs() *cliArgs {
 func main() {
 	args := parseArgs()
 
-	diff, newSummary, err := diff.Diff(diff.WalkChan(args.dir), diff.SummaryChan(args.sum))
+	d, s, err := diff.Diff(diff.WalkChan(args.dir), diff.SummaryChan(args.sum))
 	if err != nil {
-		log.Fatalf("scan for diffs: %v", err)
+		log.Fatalf("execute diff: %v", err)
 	}
 
-	diffBytes, err := proto.Marshal(diff)
+	err = diff.WriteSummary(filepath.Join(args.out, "sum.zst"), s)
 	if err != nil {
-		log.Fatalf("marshal diff: %v", err)
+		log.Fatalf("write diff to disk: %v", err)
 	}
 
-	newSummaryBytes, err := proto.Marshal(newSummary)
+	err = diff.WriteDiff(filepath.Join(args.out, "diff.zst"), d)
 	if err != nil {
-		log.Fatalf("marshal new summary: %v", err)
-	}
-
-	err = os.WriteFile(filepath.Join(args.out, "example_diff"), diffBytes, 0666)
-	if err != nil {
-		log.Fatalf("write diff: %v", err)
-	}
-
-	err = os.WriteFile(filepath.Join(args.out, "example_sum"), newSummaryBytes, 0666)
-	if err != nil {
-		log.Fatalf("write new summary: %v", err)
+		log.Fatalf("write summary to disk: %v", err)
 	}
 }

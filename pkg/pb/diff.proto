@@ -8,7 +8,7 @@ message Update {
     enum Action {
         ADD = 0;
         REMOVE = 1;
-        CHANGED = 2;
+        CHANGE = 2;
     }
     string path = 1;
     Action action = 2;

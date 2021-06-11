@@ -4,14 +4,11 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"io/fs"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/angelini/fsdiff/pkg/pb"
-	"google.golang.org/protobuf/proto"
 )
 
 func hashFile(path string) ([]byte, error) {
@@ -94,16 +91,16 @@ func SummaryChan(path string) <-chan *Entry {
 	}
 
 	go func() {
-		summary := pb.Summary{}
-
-		file, err := ioutil.ReadFile(path)
+		summary, err := ReadSummary(path)
 		if err != nil {
-			log.Fatalf("read summary file %v: %v", path, err)
-		}
-
-		err = proto.Unmarshal(file, &summary)
-		if err != nil {
-			log.Fatalf("unmarshal summary: %v", err)
+			entryChan <- &Entry{
+				path: "",
+				mode: 0,
+				hash: nil,
+				err:  err,
+			}
+			close(entryChan)
+			return
 		}
 
 		for _, entry := range summary.Entries {
@@ -137,6 +134,9 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 		if walkEntry != nil && walkEntry.err != nil {
 			return nil, nil, walkEntry.err
 		}
+		if sumEntry != nil && sumEntry.err != nil {
+			return nil, nil, sumEntry.err
+		}
 
 		if !walkOpen {
 			diff.Updates = append(diff.Updates, &pb.Update{
@@ -168,7 +168,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 			if walkEntry.mode != sumEntry.mode || !bytes.Equal(walkEntry.hash, sumEntry.hash) {
 				diff.Updates = append(diff.Updates, &pb.Update{
 					Path:   walkEntry.path,
-					Action: pb.Update_CHANGED,
+					Action: pb.Update_CHANGE,
 				})
 				sum.Entries = append(sum.Entries, &pb.FileEntry{
 					RelativeDir: filepath.Dir(walkEntry.path),
@@ -197,20 +197,19 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 			})
 
 			sumEntry, sumOpen = <-sumC
-			continue
+		} else {
+			diff.Updates = append(diff.Updates, &pb.Update{
+				Path:   walkEntry.path,
+				Action: pb.Update_ADD,
+			})
+			sum.Entries = append(sum.Entries, &pb.FileEntry{
+				RelativeDir: filepath.Dir(walkEntry.path),
+				Name:        filepath.Base(walkEntry.path),
+				Mode:        walkEntry.mode,
+				Hash:        walkEntry.hash,
+			})
+
+			walkEntry, walkOpen = <-walkC
 		}
-
-		diff.Updates = append(diff.Updates, &pb.Update{
-			Path:   walkEntry.path,
-			Action: pb.Update_ADD,
-		})
-		sum.Entries = append(sum.Entries, &pb.FileEntry{
-			RelativeDir: filepath.Dir(walkEntry.path),
-			Name:        filepath.Base(walkEntry.path),
-			Mode:        walkEntry.mode,
-			Hash:        walkEntry.hash,
-		})
-
-		walkEntry, walkOpen = <-walkC
 	}
 }
