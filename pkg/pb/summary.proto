@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/angelini/fsdiff/pkg/pb";
+
+message FileEntry {
+    string relative_dir = 1;
+    string name = 2;
+    int64 mode = 3;
+    bytes hash = 4;
+}
+
+message Summary {
+    int64 created_at = 1;
+    repeated FileEntry entries = 2;
+}
