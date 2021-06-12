@@ -4,7 +4,7 @@ package pb;
 
 option go_package = "github.com/angelini/fsdiff/pkg/pb";
 
-message FileEntry {
+message Entry {
     string path = 1;
     int64 mode = 2;
     bytes hash = 3;
@@ -12,5 +12,5 @@ message FileEntry {
 
 message Summary {
     int64 created_at = 1;
-    repeated FileEntry entries = 2;
+    repeated Entry entries = 2;
 }

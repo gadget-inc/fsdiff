@@ -16,7 +16,7 @@ func writeBytes(path string, data []byte) error {
 		return err
 	}
 
-	zstdWriter, err := zstd.NewWriter(file)
+	zstdWriter, err := zstd.NewWriter(file, zstd.WithEncoderLevel(zstd.SpeedFastest))
 	if err != nil {
 		return err
 	}

@@ -2,11 +2,12 @@ package diff
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/minio/sha256-simd"
 
 	"github.com/angelini/fsdiff/pkg/pb"
 )
@@ -28,8 +29,8 @@ type Entry struct {
 	err  error
 }
 
-func (e *Entry) toPb() *pb.FileEntry {
-	return &pb.FileEntry{
+func (e *Entry) toPb() *pb.Entry {
+	return &pb.Entry{
 		Path: e.path,
 		Mode: e.mode,
 		Hash: e.hash,
@@ -40,12 +41,12 @@ func WalkChan(dir string) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
 
 	go func() {
+		defer close(entryChan)
+
 		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
 			pushErr := func(e error) error {
 				entryChan <- &Entry{
-					path: path,
-					mode: 0,
-					err:  e,
+					err: e,
 				}
 				return e
 			}
@@ -54,8 +55,8 @@ func WalkChan(dir string) <-chan *Entry {
 				return pushErr(err)
 			}
 
+			// FIXME: Handle empty directories
 			if entry.IsDir() {
-				// FIXME: Handle empty directories
 				return nil
 			}
 
@@ -69,6 +70,11 @@ func WalkChan(dir string) <-chan *Entry {
 				return pushErr(err)
 			}
 
+			// FIXME: Handle symlinks
+			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+				return nil
+			}
+
 			hash, err := hashFile(path)
 			if err != nil {
 				return pushErr(err)
@@ -77,14 +83,12 @@ func WalkChan(dir string) <-chan *Entry {
 			entryChan <- &Entry{
 				path: relativePath,
 				mode: int64(info.Mode()),
-				hash: hash,
+				hash: hash[:],
 				err:  nil,
 			}
 
 			return nil
 		})
-
-		close(entryChan)
 	}()
 
 	return entryChan
@@ -99,15 +103,13 @@ func SummaryChan(path string) <-chan *Entry {
 	}
 
 	go func() {
+		defer close(entryChan)
+
 		summary, err := ReadSummary(path)
 		if err != nil {
 			entryChan <- &Entry{
-				path: "",
-				mode: 0,
-				hash: nil,
-				err:  err,
+				err: err,
 			}
-			close(entryChan)
 			return
 		}
 
@@ -119,8 +121,6 @@ func SummaryChan(path string) <-chan *Entry {
 				err:  nil,
 			}
 		}
-
-		close(entryChan)
 	}()
 
 	return entryChan
