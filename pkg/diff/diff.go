@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/minio/sha256-simd"
@@ -126,6 +127,28 @@ func SummaryChan(path string) <-chan *Entry {
 	return entryChan
 }
 
+func pathLessThan(left, right string) bool {
+	leftSplits := strings.Split(left, "/")
+	rightSplits := strings.Split(right, "/")
+
+	for idx, leftSplit := range leftSplits {
+		if idx >= len(rightSplits) {
+			return false
+		}
+		rightSplit := rightSplits[idx]
+
+		if leftSplit > rightSplit {
+			return false
+		}
+
+		if leftSplit < rightSplit {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 	start := time.Now().Unix()
 	diff := &pb.Diff{CreatedAt: start}
@@ -182,7 +205,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 			continue
 		}
 
-		if walkEntry.path > sumEntry.path {
+		if pathLessThan(sumEntry.path, walkEntry.path) {
 			diff.Updates = append(diff.Updates, &pb.Update{
 				Path:   sumEntry.path,
 				Action: pb.Update_REMOVE,
