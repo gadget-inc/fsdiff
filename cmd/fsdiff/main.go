@@ -49,6 +49,13 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	if args.out != "" {
+		err := os.MkdirAll(args.out, 0755)
+		if err != nil {
+			log.Fatalf("create output directory %v: %v", args.out, err)
+		}
+	}
+
 	d, s, err := diff.Diff(diff.WalkChan(args.dir), diff.SummaryChan(args.sum))
 	if err != nil {
 		log.Fatalf("execute diff: %v", err)
