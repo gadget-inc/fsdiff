@@ -10,7 +10,7 @@ import (
 
 	"github.com/minio/sha256-simd"
 
-	"github.com/angelini/fsdiff/pkg/pb"
+	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
 func hashFile(path string) ([]byte, error) {

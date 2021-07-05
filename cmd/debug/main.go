@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/angelini/fsdiff/pkg/diff"
-	"github.com/angelini/fsdiff/pkg/pb"
+	"github.com/gadget-inc/fsdiff/pkg/diff"
+	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
 type cliArgs struct {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
-	"github.com/angelini/fsdiff/pkg/diff"
+	"github.com/gadget-inc/fsdiff/pkg/diff"
 )
 
 type cliArgs struct {

@@ -1,4 +1,4 @@
-module github.com/angelini/fsdiff
+module github.com/gadget-inc/fsdiff
 
 go 1.16
 

@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/angelini/fsdiff/pkg/pb"
+	"github.com/gadget-inc/fsdiff/pkg/pb"
 	"github.com/klauspost/compress/zstd"
 	"google.golang.org/protobuf/proto"
 )
