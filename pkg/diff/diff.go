@@ -23,9 +23,19 @@ func hashFile(path string) ([]byte, error) {
 	return hash[:], nil
 }
 
+func hashLink(path string) ([]byte, error) {
+	target, err := os.Readlink(path)
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.Sum256([]byte(target))
+	return hash[:], nil
+}
+
 type Entry struct {
 	path string
-	mode int64
+	mode fs.FileMode
 	hash []byte
 	err  error
 }
@@ -33,7 +43,7 @@ type Entry struct {
 func (e *Entry) toPb() *pb.Entry {
 	return &pb.Entry{
 		Path: e.path,
-		Mode: e.mode,
+		Mode: uint32(e.mode),
 		Hash: e.hash,
 	}
 }
@@ -71,19 +81,20 @@ func WalkChan(dir string) <-chan *Entry {
 				return pushErr(err)
 			}
 
-			// FIXME: Handle symlinks
-			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-				return nil
-			}
+			var hash []byte
 
-			hash, err := hashFile(path)
+			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+				hash, err = hashLink(path)
+			} else {
+				hash, err = hashFile(path)
+			}
 			if err != nil {
 				return pushErr(err)
 			}
 
 			entryChan <- &Entry{
 				path: relativePath,
-				mode: int64(info.Mode()),
+				mode: info.Mode(),
 				hash: hash[:],
 				err:  nil,
 			}
@@ -117,7 +128,7 @@ func SummaryChan(path string) <-chan *Entry {
 		for _, entry := range summary.Entries {
 			entryChan <- &Entry{
 				path: entry.Path,
-				mode: entry.Mode,
+				mode: fs.FileMode(entry.Mode),
 				hash: entry.Hash,
 				err:  nil,
 			}
