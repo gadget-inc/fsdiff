@@ -54,7 +54,7 @@ func main() {
 	if args.diff != "" {
 		diff, err := diff.ReadDiff(args.diff)
 		if err != nil {
-			log.Fatalf("read diff file %v: %v", args.sum, err)
+			log.Fatalf("read diff file %v: %v", args.diff, err)
 		}
 
 		fmt.Println("")

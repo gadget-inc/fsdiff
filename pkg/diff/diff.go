@@ -2,6 +2,7 @@ package diff
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -33,6 +34,11 @@ func hashLink(path string) ([]byte, error) {
 	return hash[:], nil
 }
 
+func hashEmptyDir() []byte {
+	hash := sha256.Sum256([]byte(""))
+	return hash[:]
+}
+
 type Entry struct {
 	path string
 	mode fs.FileMode
@@ -51,24 +57,37 @@ func (e *Entry) toPb() *pb.Entry {
 func WalkChan(dir string) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
 
+	pushErr := func(err error) error {
+		entryChan <- &Entry{
+			err: err,
+		}
+		return err
+	}
+
+	pushEmptyDir := func(path string, mode fs.FileMode) {
+		entryChan <- &Entry{
+			path: fmt.Sprintf("%s/", path),
+			mode: mode,
+			hash: hashEmptyDir(),
+		}
+	}
+
 	go func() {
 		defer close(entryChan)
+		maybeEmptyDir := ""
+		emptyDirMode := fs.FileMode(0)
 
 		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
-			pushErr := func(e error) error {
-				entryChan <- &Entry{
-					err: e,
+			if maybeEmptyDir != "" {
+				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir)) {
+					pushEmptyDir(maybeEmptyDir, emptyDirMode)
 				}
-				return e
+				maybeEmptyDir = ""
+				emptyDirMode = fs.FileMode(0)
 			}
 
 			if err != nil {
 				return pushErr(err)
-			}
-
-			// FIXME: Handle empty directories
-			if entry.IsDir() {
-				return nil
 			}
 
 			relativePath, err := filepath.Rel(dir, path)
@@ -79,6 +98,12 @@ func WalkChan(dir string) <-chan *Entry {
 			info, err := entry.Info()
 			if err != nil {
 				return pushErr(err)
+			}
+
+			if entry.IsDir() {
+				maybeEmptyDir = relativePath
+				emptyDirMode = info.Mode()
+				return nil
 			}
 
 			var hash []byte
@@ -101,6 +126,10 @@ func WalkChan(dir string) <-chan *Entry {
 
 			return nil
 		})
+
+		if maybeEmptyDir != "" {
+			pushEmptyDir(maybeEmptyDir, emptyDirMode)
+		}
 	}()
 
 	return entryChan
