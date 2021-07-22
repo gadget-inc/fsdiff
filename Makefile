@@ -9,3 +9,11 @@ bin/%: cmd/%/main.go $(PKG_GO_FILES)
 	go build -o $@ $<
 
 build: pkg/pb/diff.pb.go pkg/pb/summary.pb.go  bin/fsdiff bin/debug
+
+release/%_linux_amd64: cmd/%/main.go $(PKG_GO_FILES)
+	GOOS=linux GOARCH=amd64 go build -o $@ $<
+
+release/%_macos_amd64: cmd/%/main.go $(PKG_GO_FILES)
+	GOOS=darwin GOARCH=amd64 go build -o $@ $<
+
+release: release/fsdiff_linux_amd64 release/fsdiff_macos_amd64

@@ -1,4 +1,5 @@
 bin/
 example/
+release/
 sum.zst
 diff.zst
