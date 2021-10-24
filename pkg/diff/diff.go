@@ -2,6 +2,7 @@ package diff
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -96,6 +97,11 @@ func WalkChan(dir string) <-chan *Entry {
 			}
 
 			info, err := entry.Info()
+			// If the file has been removed while walking the directory
+			// Do not emit it and pretend it was never seen by this walker.
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			if err != nil {
 				return pushErr(err)
 			}

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gadget-inc/fsdiff/pkg/pb"
-	"github.com/klauspost/compress/zstd"
+	"github.com/klauspost/compress/s2"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -17,15 +17,11 @@ func readBytes(path string) ([]byte, error) {
 	}
 	defer file.Close()
 
-	zstdReader, err := zstd.NewReader(file)
-	if err != nil {
-		return nil, err
-	}
-	defer zstdReader.Close()
+	s2Reader := s2.NewReader(file)
 
 	var buffer bytes.Buffer
 
-	_, err = io.Copy(&buffer, zstdReader)
+	_, err = io.Copy(&buffer, s2Reader)
 	if err != nil {
 		return nil, err
 	}
