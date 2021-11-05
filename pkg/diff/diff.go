@@ -55,7 +55,7 @@ func (e *Entry) toPb() *pb.Entry {
 	}
 }
 
-func WalkChan(dir string) <-chan *Entry {
+func WalkChan(dir string, ignores []string) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
 
 	pushErr := func(err error) error {
@@ -94,6 +94,12 @@ func WalkChan(dir string) <-chan *Entry {
 			relativePath, err := filepath.Rel(dir, path)
 			if err != nil {
 				return pushErr(err)
+			}
+
+			for _, ignore := range ignores {
+				if relativePath == ignore {
+					return nil
+				}
 			}
 
 			info, err := entry.Info()

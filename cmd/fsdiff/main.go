@@ -6,22 +6,25 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/pprof"
+	"strings"
 
 	"github.com/gadget-inc/fsdiff/pkg/diff"
 )
 
 type cliArgs struct {
-	dir  string
-	sum  string
-	out  string
-	prof string
+	dir     string
+	sum     string
+	out     string
+	prof    string
+	ignores []string
 }
 
 func parseArgs() *cliArgs {
-	dir := flag.String("dir", "", "The directory that will be diffed")
+	dir := flag.String("dir", "", "The directory that will be diffed (required)")
 	sum := flag.String("sum", "", "A directory summary from a previous run")
 	out := flag.String("out", "", "Output path, the new summary and diff will be written here")
 	prof := flag.String("prof", "", "Output CPU profile to this path")
+	ignores := flag.String("ignores", "", "Comma separated list of paths to ignore")
 
 	flag.Parse()
 
@@ -29,11 +32,17 @@ func parseArgs() *cliArgs {
 		log.Fatal("-dir required")
 	}
 
+	parsedIgnores := strings.Split(*ignores, ",")
+	for idx, ignore := range parsedIgnores {
+		parsedIgnores[idx] = strings.TrimSpace(ignore)
+	}
+
 	return &cliArgs{
-		dir:  *dir,
-		sum:  *sum,
-		out:  *out,
-		prof: *prof,
+		dir:     *dir,
+		sum:     *sum,
+		out:     *out,
+		prof:    *prof,
+		ignores: parsedIgnores,
 	}
 }
 
@@ -56,7 +65,7 @@ func main() {
 		}
 	}
 
-	d, s, err := diff.Diff(diff.WalkChan(args.dir), diff.SummaryChan(args.sum))
+	d, s, err := diff.Diff(diff.WalkChan(args.dir, args.ignores), diff.SummaryChan(args.sum))
 	if err != nil {
 		log.Fatalf("execute diff: %v", err)
 	}
