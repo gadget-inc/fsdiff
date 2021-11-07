@@ -147,24 +147,11 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 	return entryChan
 }
 
-func SummaryChan(path string) <-chan *Entry {
+func SummaryChan(summary *pb.Summary) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
-
-	if path == "" {
-		close(entryChan)
-		return entryChan
-	}
 
 	go func() {
 		defer close(entryChan)
-
-		summary, err := ReadSummary(path)
-		if err != nil {
-			entryChan <- &Entry{
-				err: err,
-			}
-			return
-		}
 
 		for _, entry := range summary.Entries {
 			entryChan <- &Entry{

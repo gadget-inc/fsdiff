@@ -32,6 +32,10 @@ func readBytes(path string) ([]byte, error) {
 func ReadSummary(path string) (*pb.Summary, error) {
 	var summary pb.Summary
 
+	if path == "" {
+		return &summary, nil
+	}
+
 	data, err := readBytes(path)
 	if err != nil {
 		return nil, err

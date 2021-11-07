@@ -65,7 +65,12 @@ func main() {
 		}
 	}
 
-	d, s, err := diff.Diff(diff.WalkChan(args.dir, args.ignores), diff.SummaryChan(args.sum))
+	summary, err := diff.ReadSummary(args.sum)
+	if err != nil {
+		log.Fatalf("read summary from disk: %v", err)
+	}
+
+	d, s, err := diff.Diff(diff.WalkChan(args.dir, args.ignores), diff.SummaryChan(summary))
 	if err != nil {
 		log.Fatalf("execute diff: %v", err)
 	}
