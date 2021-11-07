@@ -1,5 +1,5 @@
 bin/
 example/
 release/
-sum.zst
-diff.zst
+sum.s2
+diff.s2

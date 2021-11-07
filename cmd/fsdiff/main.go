@@ -75,12 +75,12 @@ func main() {
 		log.Fatalf("execute diff: %v", err)
 	}
 
-	err = diff.WriteSummary(filepath.Join(args.out, "sum.zst"), s)
+	err = diff.WriteSummary(filepath.Join(args.out, "sum.s2"), s)
 	if err != nil {
 		log.Fatalf("write diff to disk: %v", err)
 	}
 
-	err = diff.WriteDiff(filepath.Join(args.out, "diff.zst"), d)
+	err = diff.WriteDiff(filepath.Join(args.out, "diff.s2"), d)
 	if err != nil {
 		log.Fatalf("write summary to disk: %v", err)
 	}

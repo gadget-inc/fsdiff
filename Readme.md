@@ -18,19 +18,19 @@ Begin by summarizing an existing directory:
 $ bin/fsdiff -dir example
 ```
 
-This will produce `sum.zst` and `diff.zst`. The diff file contains a list of all files that have been added, removed or changed.
+This will produce `sum.s2` and `diff.s2`. The diff file contains a list of all files that have been added, removed or changed.
 
 Update the example directory and run the `fsdiff` again.
 
 ```bash
 $ echo "new" > example/new
-$ bin/fsdiff -dir example -sum sum.zst
+$ bin/fsdiff -dir example -sum sum.s2
 ```
 
 To read the contents of these files, use the included `debug` tool.
 
 ```bash
-$ bin/debug -sum sum.zst -diff diff.zst
+$ bin/debug -sum sum.s2 -diff diff.s2
 
 === Summary ===
 created at:    1623436045
