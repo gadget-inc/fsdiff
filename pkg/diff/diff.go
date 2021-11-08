@@ -88,12 +88,12 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 			}
 
 			if err != nil {
-				return pushErr(err)
+				return pushErr(fmt.Errorf("walk dir: %w", err))
 			}
 
 			relativePath, err := filepath.Rel(dir, path)
 			if err != nil {
-				return pushErr(err)
+				return pushErr(fmt.Errorf("relative path: %w", err))
 			}
 
 			for _, ignore := range ignores {
@@ -109,7 +109,7 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 				return nil
 			}
 			if err != nil {
-				return pushErr(err)
+				return pushErr(fmt.Errorf("stat file: %w", err))
 			}
 
 			if entry.IsDir() {
@@ -126,7 +126,7 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 				hash, err = hashFile(path)
 			}
 			if err != nil {
-				return pushErr(err)
+				return pushErr(fmt.Errorf("hash file: %w", err))
 			}
 
 			entryChan <- &Entry{
