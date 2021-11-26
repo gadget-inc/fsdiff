@@ -15,6 +15,11 @@ import (
 	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
+const (
+	fileLimit = 25_000
+	timeLimit = 250 * time.Millisecond
+)
+
 func hashFile(path string) ([]byte, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -188,24 +193,51 @@ func pathLessThan(left, right string) bool {
 	return false
 }
 
+type channelInfo struct {
+	name    string
+	count   int
+	channel <-chan *Entry
+}
+
+func readFromChan(info *channelInfo) (*Entry, bool) {
+	if info.count > fileLimit {
+		return &Entry{
+			err: fmt.Errorf("maximum file count reached from: %v", info.name),
+		}, false
+	}
+
+	select {
+	case entry, open := <-info.channel:
+		info.count += 1
+		return entry, open
+	case <-time.After(timeLimit):
+		return &Entry{
+			err: fmt.Errorf("timeout waiting for entry from: %v", info.name),
+		}, false
+	}
+}
+
 func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 	start := time.Now().Unix()
 	diff := &pb.Diff{CreatedAt: start}
-	sum := &pb.Summary{CreatedAt: start}
+	summary := &pb.Summary{CreatedAt: start}
 
-	walkEntry, walkOpen := <-walkC
-	sumEntry, sumOpen := <-sumC
+	walk := channelInfo{name: "walk", channel: walkC}
+	sum := channelInfo{name: "sum", channel: sumC}
+
+	walkEntry, walkOpen := readFromChan(&walk)
+	sumEntry, sumOpen := readFromChan(&sum)
 
 	for {
-		if !walkOpen && !sumOpen {
-			return diff, sum, nil
-		}
-
 		if walkEntry != nil && walkEntry.err != nil {
 			return nil, nil, walkEntry.err
 		}
 		if sumEntry != nil && sumEntry.err != nil {
 			return nil, nil, sumEntry.err
+		}
+
+		if !walkOpen && !sumOpen {
+			return diff, summary, nil
 		}
 
 		if !walkOpen {
@@ -214,7 +246,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				Action: pb.Update_REMOVE,
 			})
 
-			sumEntry, sumOpen = <-sumC
+			sumEntry, sumOpen = readFromChan(&sum)
 			continue
 		}
 
@@ -223,9 +255,9 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				Path:   walkEntry.path,
 				Action: pb.Update_ADD,
 			})
-			sum.Entries = append(sum.Entries, walkEntry.toPb())
+			summary.Entries = append(summary.Entries, walkEntry.toPb())
 
-			walkEntry, walkOpen = <-walkC
+			walkEntry, walkOpen = readFromChan(&walk)
 			continue
 		}
 
@@ -237,10 +269,10 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				})
 			}
 
-			sum.Entries = append(sum.Entries, walkEntry.toPb())
+			summary.Entries = append(summary.Entries, walkEntry.toPb())
 
-			walkEntry, walkOpen = <-walkC
-			sumEntry, sumOpen = <-sumC
+			walkEntry, walkOpen = readFromChan(&walk)
+			sumEntry, sumOpen = readFromChan(&sum)
 			continue
 		}
 
@@ -250,15 +282,15 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 				Action: pb.Update_REMOVE,
 			})
 
-			sumEntry, sumOpen = <-sumC
+			sumEntry, sumOpen = readFromChan(&sum)
 		} else {
 			diff.Updates = append(diff.Updates, &pb.Update{
 				Path:   walkEntry.path,
 				Action: pb.Update_ADD,
 			})
-			sum.Entries = append(sum.Entries, walkEntry.toPb())
+			summary.Entries = append(summary.Entries, walkEntry.toPb())
 
-			walkEntry, walkOpen = <-walkC
+			walkEntry, walkOpen = readFromChan(&walk)
 		}
 	}
 }
