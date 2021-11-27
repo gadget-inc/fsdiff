@@ -20,3 +20,6 @@ release: release/fsdiff_linux_amd64 release/fsdiff_macos_amd64
 
 test:
 	cd test && go test
+
+bench:
+	cd test && go test -bench=. -benchtime=10x

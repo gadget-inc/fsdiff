@@ -3,3 +3,8 @@ example/
 release/
 sum.s2
 diff.s2
+sum.zst
+diff.zst
+.direnv
+
+test/fixtures/*/node_modules

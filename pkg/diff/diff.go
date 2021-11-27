@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	fileLimit = 25_000
+	fileLimit = 100_000
 	timeLimit = 250 * time.Millisecond
 )
 
