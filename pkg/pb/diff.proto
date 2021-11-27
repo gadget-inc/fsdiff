@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/gadget-inc/fsdiff/pkg/pb";
+
+message Update {
+    enum Action {
+        ADD = 0;
+        REMOVE = 1;
+        CHANGE = 2;
+    }
+    string path = 1;
+    Action action = 2;
+}
+
+message Diff {
+    int64 created_at = 1;
+    repeated Update updates = 2;
+}

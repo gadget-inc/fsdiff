@@ -1,0 +1,6 @@
+bin/
+example/
+release/
+sum.s2
+diff.s2
+.direnv
