@@ -130,6 +130,9 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 			} else {
 				hash, err = hashFile(path)
 			}
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			if err != nil {
 				return pushErr(fmt.Errorf("hash file: %w", err))
 			}
