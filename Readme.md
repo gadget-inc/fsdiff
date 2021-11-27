@@ -47,3 +47,7 @@ total updates: 1
 
 0: action:ADD path:new
 ```
+
+## Benchmarks
+
+Find 'em here: https://gadget-inc.github.io/fsdiff/dev/bench/
