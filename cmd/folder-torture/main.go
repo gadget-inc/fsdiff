@@ -9,15 +9,18 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"syscall"
 )
 
 type cliArgs struct {
-	dir string
+	dir         string
+	concurrency int
 }
 
 func parseArgs() *cliArgs {
 	dir := flag.String("dir", "", "The directory that will be diffed (required)")
+	concurrency := flag.Int("concurrency", runtime.GOMAXPROCS(0), "The directory that will be diffed (required)")
 
 	flag.Parse()
 
@@ -26,7 +29,8 @@ func parseArgs() *cliArgs {
 	}
 
 	return &cliArgs{
-		dir: *dir,
+		dir:         *dir,
+		concurrency: *concurrency,
 	}
 }
 
@@ -98,9 +102,9 @@ func torture(dir string) {
 func main() {
 	args := parseArgs()
 
-	go torture(args.dir)
-	go torture(args.dir)
-	go torture(args.dir)
+	for i := 0; i < args.concurrency; i++ {
+		go torture(args.dir)
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
