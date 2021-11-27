@@ -19,7 +19,13 @@
           packages = rec {
             go = pkgs.go;
             git = pkgs.git;
+
+            nodejs = pkgs.nodejs-16_x;
+            yarn = pkgs.yarn.override {
+              inherit nodejs;
+            };
           };
+
 
           devShell = pkgs.mkShell {
             packages = builtins.attrValues self.packages.${system};
