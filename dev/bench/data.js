@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638044561298,
+  "lastUpdate": 1638044694745,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -502,6 +502,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 2878942314,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "arbourd@users.noreply.github.com",
+            "name": "Dylan Arbour",
+            "username": "arbourd"
+          },
+          "committer": {
+            "email": "arbourd@users.noreply.github.com",
+            "name": "Dylan Arbour",
+            "username": "arbourd"
+          },
+          "distinct": true,
+          "id": "b7b0dccb2dccb8279ba636f4a118d4ca0915bce4",
+          "message": "Add GoReleaser",
+          "timestamp": "2021-11-27T15:21:43-05:00",
+          "tree_id": "73b62d9191895b16741f885791a5375ac0eab026",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/b7b0dccb2dccb8279ba636f4a118d4ca0915bce4"
+        },
+        "date": 1638044694235,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 424915,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2379273184,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3433533544,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
