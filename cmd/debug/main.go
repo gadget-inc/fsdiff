@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gadget-inc/fsdiff/pkg/debug"
 	"github.com/gadget-inc/fsdiff/pkg/diff"
 	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
@@ -40,9 +41,7 @@ func main() {
 		}
 
 		fmt.Println("")
-		fmt.Println("=== Summary ===")
-		fmt.Printf("created at:    %v\n", summary.CreatedAt)
-		fmt.Printf("total entries: %v\n", len(summary.Entries))
+		debug.PrintSummarySummary(summary)
 		fmt.Println("")
 
 		for i := 0; i < args.sample && i < len(summary.Entries); i++ {
@@ -58,9 +57,7 @@ func main() {
 		}
 
 		fmt.Println("")
-		fmt.Println("=== Diff ===")
-		fmt.Printf("created at:    %v\n", diff.CreatedAt)
-		fmt.Printf("total updates: %v\n", len(diff.Updates))
+		debug.PrintDiffSummary(diff)
 		fmt.Println("")
 
 		for i := 0; i < args.sample && i < len(diff.Updates); i++ {
