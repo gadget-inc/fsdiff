@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638038613935,
+  "lastUpdate": 1638038785026,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -334,6 +334,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3342743942,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "distinct": true,
+          "id": "c2b2e82195575d6efe69ca937afd901f3b634db0",
+          "message": "Fix a crash where if a file is removed while walking directories we paniced",
+          "timestamp": "2021-11-27T18:43:01Z",
+          "tree_id": "290d4a3979b50e9ab0c59ecf7d1aeb8134d6febb",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/c2b2e82195575d6efe69ca937afd901f3b634db0"
+        },
+        "date": 1638038784518,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 761701,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2223654873,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3323632620,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
