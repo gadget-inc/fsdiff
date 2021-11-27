@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638039291840,
+  "lastUpdate": 1638039323151,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -418,6 +418,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3379165881,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17196760007314972934ee809d6ec4ab8b95e7e3",
+          "message": "Merge pull request #3 from gadget-inc/continuous-bench\n\nAdd a few simple benchmarks and a github action to run them continously in CI",
+          "timestamp": "2021-11-27T13:52:22-05:00",
+          "tree_id": "290d4a3979b50e9ab0c59ecf7d1aeb8134d6febb",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/17196760007314972934ee809d6ec4ab8b95e7e3"
+        },
+        "date": 1638039322639,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 466078,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2374414384,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3354449159,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
