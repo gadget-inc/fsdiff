@@ -8,6 +8,7 @@ import (
 	"runtime/pprof"
 	"strings"
 
+	"github.com/gadget-inc/fsdiff/pkg/debug"
 	"github.com/gadget-inc/fsdiff/pkg/diff"
 )
 
@@ -17,6 +18,7 @@ type cliArgs struct {
 	out     string
 	prof    string
 	ignores []string
+	verbose *bool
 }
 
 func parseArgs() *cliArgs {
@@ -25,6 +27,7 @@ func parseArgs() *cliArgs {
 	out := flag.String("out", "", "Output path, the new summary and diff will be written here")
 	prof := flag.String("prof", "", "Output CPU profile to this path")
 	ignores := flag.String("ignores", "", "Comma separated list of paths to ignore")
+	verbose := flag.Bool("verbose", false, "Print extra information about what fsdiff is doing")
 
 	flag.Parse()
 
@@ -43,6 +46,7 @@ func parseArgs() *cliArgs {
 		out:     *out,
 		prof:    *prof,
 		ignores: parsedIgnores,
+		verbose: verbose,
 	}
 }
 
@@ -83,5 +87,10 @@ func main() {
 	err = diff.WriteDiff(filepath.Join(args.out, "diff.s2"), d)
 	if err != nil {
 		log.Fatalf("write summary to disk: %v", err)
+	}
+
+	if *args.verbose {
+		debug.PrintSummarySummary(s)
+		debug.PrintDiffSummary(d)
 	}
 }

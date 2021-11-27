@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	fileLimit = 25_000
+	fileLimit = 100_000
 	timeLimit = 250 * time.Millisecond
 )
 
@@ -92,6 +92,9 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 				emptyDirMode = fs.FileMode(0)
 			}
 
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			if err != nil {
 				return pushErr(fmt.Errorf("walk dir: %w", err))
 			}
@@ -129,6 +132,9 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 				hash, err = hashLink(path)
 			} else {
 				hash, err = hashFile(path)
+			}
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
 			}
 			if err != nil {
 				return pushErr(fmt.Errorf("hash file: %w", err))
