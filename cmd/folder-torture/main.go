@@ -38,13 +38,13 @@ func doRandomFileOperation(dir string) {
 	choice := rand.Intn(10)
 	switch {
 	// make some new files
-	case choice < 5:
+	case choice < 7:
 		segmentCount := rand.Intn(3) + 2
 		segments := make([]string, segmentCount+1)
 		segments[0] = dir
 
 		for i := 1; i <= segmentCount; i++ {
-			segments[i] = fmt.Sprintf("%v", rand.Intn(5))
+			segments[i] = fmt.Sprintf("%v", rand.Intn(10))
 		}
 
 		fileDir := filepath.Join(segments...)
