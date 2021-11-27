@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638031891157,
+  "lastUpdate": 1638032141341,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -124,6 +124,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3402190366,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "distinct": true,
+          "id": "58ff5bd705410f796bb675c07f9b6db614cf66e9",
+          "message": "Fix a crash where if a file is removed after it's been listed but before it's been hashed we paniced\n\nInstead, the file is gone, we can just not include it in the summary, same as above where we don't include it if we can't stat it",
+          "timestamp": "2021-11-27T11:52:08-05:00",
+          "tree_id": "056537eb2ab59081cbcfe5c700d9e104e000d18b",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/58ff5bd705410f796bb675c07f9b6db614cf66e9"
+        },
+        "date": 1638032140877,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 387722,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2282026763,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3361207905,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
