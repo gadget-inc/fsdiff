@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638037487522,
+  "lastUpdate": 1638038613935,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -292,6 +292,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 2888821042,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "distinct": true,
+          "id": "f5fa9f6f1b01c3f80583d31140bcc352507050b2",
+          "message": "Add an initial state torturer and remove the make entry for less noise",
+          "timestamp": "2021-11-27T18:40:49Z",
+          "tree_id": "e0ce8313b51648e62a47f892a4e303c81bb78304",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/f5fa9f6f1b01c3f80583d31140bcc352507050b2"
+        },
+        "date": 1638038613436,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 448143,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2307349312,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3342743942,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
