@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638037427938,
+  "lastUpdate": 1638037487522,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -250,6 +250,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3366147924,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "distinct": true,
+          "id": "af94737de3254aac926f9a936d8f6b0ec3ecc4a7",
+          "message": "Add a torture concurrency flag",
+          "timestamp": "2021-11-27T13:22:20-05:00",
+          "tree_id": "289c95aaffef271505647604fb8ff7e2031c6757",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/af94737de3254aac926f9a936d8f6b0ec3ecc4a7"
+        },
+        "date": 1638037487038,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 346936,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2010086935,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 2888821042,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
