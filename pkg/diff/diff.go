@@ -92,6 +92,9 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 				emptyDirMode = fs.FileMode(0)
 			}
 
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			if err != nil {
 				return pushErr(fmt.Errorf("walk dir: %w", err))
 			}
