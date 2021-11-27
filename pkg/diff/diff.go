@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/sha256-simd"
-
 	"github.com/gadget-inc/fsdiff/pkg/pb"
+	"github.com/karrick/godirwalk"
+	"github.com/minio/sha256-simd"
 )
 
 const (
@@ -83,66 +83,63 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 		maybeEmptyDir := ""
 		emptyDirMode := fs.FileMode(0)
 
-		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
-			if maybeEmptyDir != "" {
-				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir)) {
-					pushEmptyDir(maybeEmptyDir, emptyDirMode)
+		godirwalk.Walk(dir, &godirwalk.Options{
+			Callback: func(path string, entry *godirwalk.Dirent) error {
+				if maybeEmptyDir != "" {
+					if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir)) {
+						pushEmptyDir(maybeEmptyDir, emptyDirMode)
+					}
+					maybeEmptyDir = ""
+					emptyDirMode = fs.FileMode(0)
 				}
-				maybeEmptyDir = ""
-				emptyDirMode = fs.FileMode(0)
-			}
 
-			if err != nil {
-				return pushErr(fmt.Errorf("walk dir: %w", err))
-			}
+				relativePath, err := filepath.Rel(dir, path)
+				if err != nil {
+					return pushErr(fmt.Errorf("relative path: %w", err))
+				}
 
-			relativePath, err := filepath.Rel(dir, path)
-			if err != nil {
-				return pushErr(fmt.Errorf("relative path: %w", err))
-			}
+				for _, ignore := range ignores {
+					if relativePath == ignore {
+						return nil
+					}
+				}
 
-			for _, ignore := range ignores {
-				if relativePath == ignore {
+				info, err := os.Stat(path)
+				// If the file has been removed while walking the directory
+				// Do not emit it and pretend it was never seen by this walker.
+				if errors.Is(err, fs.ErrNotExist) {
 					return nil
 				}
-			}
+				if err != nil {
+					return pushErr(fmt.Errorf("stat file: %w", err))
+				}
 
-			info, err := entry.Info()
-			// If the file has been removed while walking the directory
-			// Do not emit it and pretend it was never seen by this walker.
-			if errors.Is(err, fs.ErrNotExist) {
+				if entry.IsDir() {
+					maybeEmptyDir = relativePath
+					emptyDirMode = info.Mode()
+					return nil
+				}
+
+				var hash []byte
+
+				if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+					hash, err = hashLink(path)
+				} else {
+					hash, err = hashFile(path)
+				}
+				if err != nil {
+					return pushErr(fmt.Errorf("hash file: %w", err))
+				}
+
+				entryChan <- &Entry{
+					path: relativePath,
+					mode: info.Mode(),
+					hash: hash[:],
+					err:  nil,
+				}
+
 				return nil
-			}
-			if err != nil {
-				return pushErr(fmt.Errorf("stat file: %w", err))
-			}
-
-			if entry.IsDir() {
-				maybeEmptyDir = relativePath
-				emptyDirMode = info.Mode()
-				return nil
-			}
-
-			var hash []byte
-
-			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-				hash, err = hashLink(path)
-			} else {
-				hash, err = hashFile(path)
-			}
-			if err != nil {
-				return pushErr(fmt.Errorf("hash file: %w", err))
-			}
-
-			entryChan <- &Entry{
-				path: relativePath,
-				mode: info.Mode(),
-				hash: hash[:],
-				err:  nil,
-			}
-
-			return nil
-		})
+			}})
 
 		if maybeEmptyDir != "" {
 			pushEmptyDir(maybeEmptyDir, emptyDirMode)
