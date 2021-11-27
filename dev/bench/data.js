@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638038785026,
+  "lastUpdate": 1638039291840,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -376,6 +376,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3323632620,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "harry.brundage@gmail.com",
+            "name": "Harry Brundage",
+            "username": "airhorns"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f1aeee5b6629c833133897c0f438492f5c41966",
+          "message": "Merge pull request #6 from gadget-inc/torture\n\nAdd a torture-er and fix two crashes it identified",
+          "timestamp": "2021-11-27T13:52:01-05:00",
+          "tree_id": "290d4a3979b50e9ab0c59ecf7d1aeb8134d6febb",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/3f1aeee5b6629c833133897c0f438492f5c41966"
+        },
+        "date": 1638039290930,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 413883,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2341377396,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3379165881,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
