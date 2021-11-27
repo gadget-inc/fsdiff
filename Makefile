@@ -23,3 +23,6 @@ test:
 
 bench:
 	cd test && go test -bench=. -benchtime=10x
+
+torture:
+	test/torture.sh
