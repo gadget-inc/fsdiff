@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638182899794,
+  "lastUpdate": 1638183317745,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -796,6 +796,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3402807294,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "20ecb900ee210baa681e5bd4f5313d4beec142d3",
+          "message": "Add main to the goreleaser config",
+          "timestamp": "2021-11-29T11:52:32+01:00",
+          "tree_id": "ca38251e17f90e902170bc611cccb8182488b57d",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/20ecb900ee210baa681e5bd4f5313d4beec142d3"
+        },
+        "date": 1638183317233,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 352464,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 1999454182,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 2900173827,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
