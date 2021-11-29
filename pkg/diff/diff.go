@@ -93,6 +93,9 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 			}
 
 			if errors.Is(err, fs.ErrNotExist) {
+				if entry != nil && entry.IsDir() {
+					return fs.SkipDir
+				}
 				return nil
 			}
 			if err != nil {
