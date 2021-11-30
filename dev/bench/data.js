@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638284604015,
+  "lastUpdate": 1638286379071,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -964,6 +964,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3574203828,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "arbourd@users.noreply.github.com",
+            "name": "Dylan Arbour",
+            "username": "arbourd"
+          },
+          "committer": {
+            "email": "arbourd@users.noreply.github.com",
+            "name": "Dylan Arbour",
+            "username": "arbourd"
+          },
+          "distinct": true,
+          "id": "45eae448d5e5e73583f695b8cdbba496a981dbca",
+          "message": "Fix GoReleaser\n\nUse the action to install the binary and run goreleaser inside of a nix\nshell.",
+          "timestamp": "2021-11-30T10:30:21-05:00",
+          "tree_id": "9b28df0767f7b3e3e20ec12dceafc55436cbdea4",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/45eae448d5e5e73583f695b8cdbba496a981dbca"
+        },
+        "date": 1638286378313,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 354820,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 1984979771,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 2875652320,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
