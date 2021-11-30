@@ -1,7 +1,6 @@
 before:
   hooks:
     - go mod download
-    - make pkg/pb/diff.pb.go pkg/pb/summary.pb.go
 
 builds:
   - main: ./cmd/fsdiff/main.go
