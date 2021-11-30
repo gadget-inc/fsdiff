@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638288304153,
+  "lastUpdate": 1638288538882,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -1048,6 +1048,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3452907296,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "928264163c3f5f3da74995969763825fc9c5214f",
+          "message": "Log slow to process files",
+          "timestamp": "2021-11-30T17:06:13+01:00",
+          "tree_id": "b593e067c20de465b8176ff4bf1c872b83b0ecca",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/928264163c3f5f3da74995969763825fc9c5214f"
+        },
+        "date": 1638288538366,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 376355,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 1986876070,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 2876296591,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
