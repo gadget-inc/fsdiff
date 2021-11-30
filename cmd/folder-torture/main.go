@@ -61,7 +61,7 @@ func doRandomFileOperation(dir string) {
 			log.Printf("write tmp file failed %v: %v", fileName, err)
 			return
 		}
-		log.Printf("made file", fileName)
+		log.Printf("made file %v", fileName)
 
 	// move a directory
 	case choice < 8:

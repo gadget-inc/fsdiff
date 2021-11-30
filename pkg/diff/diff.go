@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +19,10 @@ import (
 const (
 	fileLimit = 100_000
 	timeLimit = 250 * time.Millisecond
+)
+
+var (
+	currentPath = ""
 )
 
 func hashFile(path string) ([]byte, error) {
@@ -84,6 +89,8 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 		emptyDirMode := fs.FileMode(0)
 
 		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
+			currentPath = path
+
 			if maybeEmptyDir != "" {
 				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir)) {
 					pushEmptyDir(maybeEmptyDir, emptyDirMode)
@@ -215,15 +222,24 @@ func readFromChan(info *channelInfo) (*Entry, bool) {
 		}, false
 	}
 
-	select {
-	case entry, open := <-info.channel:
-		info.count += 1
-		return entry, open
-	case <-time.After(timeLimit):
-		return &Entry{
-			err: fmt.Errorf("timeout waiting for entry from: %v", info.name),
-		}, false
+	for i := 0; i < 3; i++ {
+		select {
+		case entry, open := <-info.channel:
+			info.count += 1
+			return entry, open
+		case <-time.After(timeLimit):
+			if info.name == "walk" {
+				log.Printf("single file timeout elapsed for %v from the filesystem channel", currentPath)
+			} else {
+				log.Printf("single file timeout elapsed from the %v channel", info.name)
+			}
+
+		}
 	}
+
+	return &Entry{
+		err: fmt.Errorf("timeout waiting for entry from: %v", info.name),
+	}, false
 }
 
 func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
