@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638291862241,
+  "lastUpdate": 1638291899786,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -1174,6 +1174,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 3501796000,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "9ddfa799c0d2ba493f0597e6c8793b8b7d3a300a",
+          "message": "Remove protoc call from go releaser",
+          "timestamp": "2021-11-30T18:01:37+01:00",
+          "tree_id": "056108a837d47a59b9bbb7cddc8dcd6de7d90b5d",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/9ddfa799c0d2ba493f0597e6c8793b8b7d3a300a"
+        },
+        "date": 1638291899248,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 751698,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2437061348,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 3460785433,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
