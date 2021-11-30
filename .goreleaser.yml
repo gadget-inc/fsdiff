@@ -1,15 +1,19 @@
 before:
   hooks:
     - go mod download
+    - make pkg/pb/diff.pb.go pkg/pb/summary.pb.go
 
 builds:
-  - env:
+  - main: ./cmd/fsdiff/main.go
+    binary: fsdiff
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - darwin
     goarch:
       - amd64
+      - arm64
 
 changelog:
   skip: true
