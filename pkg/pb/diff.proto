@@ -15,6 +15,5 @@ message Update {
 }
 
 message Diff {
-    int64 created_at = 1;
-    repeated Update updates = 2;
+    repeated Update updates = 1;
 }
