@@ -51,21 +51,23 @@ func hashEmptyDir() []byte {
 }
 
 type Entry struct {
-	path string
-	mode fs.FileMode
-	hash []byte
-	err  error
+	path    string
+	mode    fs.FileMode
+	modTime int64
+	hash    []byte
+	err     error
 }
 
 func (e *Entry) toPb() *pb.Entry {
 	return &pb.Entry{
-		Path: e.path,
-		Mode: uint32(e.mode),
-		Hash: e.hash,
+		Path:    e.path,
+		Mode:    uint32(e.mode),
+		ModTime: e.modTime,
+		Hash:    e.hash,
 	}
 }
 
-func WalkChan(dir string, ignores []string) <-chan *Entry {
+func WalkChan(dir string, ignores []string, latestModTime int64) <-chan *Entry {
 	entryChan := make(chan *Entry, 100)
 
 	pushErr := func(err error) error {
@@ -138,23 +140,26 @@ func WalkChan(dir string, ignores []string) <-chan *Entry {
 
 			var hash []byte
 
-			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-				hash, err = hashLink(path)
-			} else {
-				hash, err = hashFile(path)
-			}
-			if errors.Is(err, fs.ErrNotExist) {
-				return nil
-			}
-			if err != nil {
-				return pushErr(fmt.Errorf("hash file: %w", err))
+			if info.ModTime().UnixNano() >= latestModTime {
+				if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+					hash, err = hashLink(path)
+				} else {
+					hash, err = hashFile(path)
+				}
+				if errors.Is(err, fs.ErrNotExist) {
+					return nil
+				}
+				if err != nil {
+					return pushErr(fmt.Errorf("hash file: %w", err))
+				}
 			}
 
 			entryChan <- &Entry{
-				path: relativePath,
-				mode: info.Mode(),
-				hash: hash[:],
-				err:  nil,
+				path:    relativePath,
+				mode:    info.Mode(),
+				modTime: info.ModTime().UnixNano(),
+				hash:    hash[:],
+				err:     nil,
 			}
 
 			return nil
@@ -176,10 +181,11 @@ func SummaryChan(summary *pb.Summary) <-chan *Entry {
 
 		for _, entry := range summary.Entries {
 			entryChan <- &Entry{
-				path: entry.Path,
-				mode: fs.FileMode(entry.Mode),
-				hash: entry.Hash,
-				err:  nil,
+				path:    entry.Path,
+				mode:    fs.FileMode(entry.Mode),
+				modTime: entry.ModTime,
+				hash:    entry.Hash,
+				err:     nil,
 			}
 		}
 	}()
@@ -233,7 +239,6 @@ func readFromChan(info *channelInfo) (*Entry, bool) {
 			} else {
 				log.Printf("single file timeout elapsed from the %v channel", info.name)
 			}
-
 		}
 	}
 
@@ -242,10 +247,21 @@ func readFromChan(info *channelInfo) (*Entry, bool) {
 	}, false
 }
 
+func latestModTime(summary *pb.Summary) int64 {
+	latest := int64(0)
+
+	for _, entry := range summary.Entries {
+		if entry.ModTime > latest {
+			latest = entry.ModTime
+		}
+	}
+
+	return latest
+}
+
 func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
-	start := time.Now().Unix()
-	diff := &pb.Diff{CreatedAt: start}
-	summary := &pb.Summary{CreatedAt: start}
+	diff := &pb.Diff{}
+	summary := &pb.Summary{}
 
 	walk := channelInfo{name: "walk", channel: walkC}
 	sum := channelInfo{name: "sum", channel: sumC}
@@ -262,6 +278,7 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 		}
 
 		if !walkOpen && !sumOpen {
+			summary.LatestModTime = latestModTime(summary)
 			return diff, summary, nil
 		}
 
@@ -287,11 +304,15 @@ func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
 		}
 
 		if walkEntry.path == sumEntry.path {
-			if walkEntry.mode != sumEntry.mode || !bytes.Equal(walkEntry.hash, sumEntry.hash) {
+			if walkEntry.mode != sumEntry.mode || (len(walkEntry.hash) > 0 && !bytes.Equal(walkEntry.hash, sumEntry.hash)) {
 				diff.Updates = append(diff.Updates, &pb.Update{
 					Path:   walkEntry.path,
 					Action: pb.Update_CHANGE,
 				})
+			}
+
+			if len(walkEntry.hash) == 0 {
+				walkEntry.hash = sumEntry.hash
 			}
 
 			summary.Entries = append(summary.Entries, walkEntry.toPb())

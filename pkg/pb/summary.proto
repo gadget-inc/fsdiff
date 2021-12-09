@@ -7,10 +7,11 @@ option go_package = "github.com/gadget-inc/fsdiff/pkg/pb";
 message Entry {
     string path = 1;
     uint32 mode = 2;
-    bytes hash = 3;
+    int64 mod_time = 3;
+    bytes hash = 4;
 }
 
 message Summary {
-    int64 created_at = 1;
+    int64 latest_mod_time = 1;
     repeated Entry entries = 2;
 }

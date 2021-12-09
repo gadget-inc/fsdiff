@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gadget-inc/fsdiff/pkg/diff"
 	"github.com/gadget-inc/fsdiff/pkg/pb"
@@ -148,7 +149,7 @@ func TestDiffWithoutSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil, 0), diff.SummaryChan(&emptySummary))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -174,7 +175,7 @@ func TestDiffWithSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	_, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(&emptySummary))
+	_, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil, 0), diff.SummaryChan(&emptySummary))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -184,7 +185,7 @@ func TestDiffWithSummary(t *testing.T) {
 		"d": "d2",
 	}, []string{"c"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, nil, s1.LatestModTime), diff.SummaryChan(s1))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -211,7 +212,7 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}, 0), diff.SummaryChan(&emptySummary))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -231,7 +232,7 @@ func TestDiffWithIgnores(t *testing.T) {
 		".ignore_2": "new ignore",
 	}, []string{})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}, s1.LatestModTime), diff.SummaryChan(s1))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -302,7 +303,7 @@ func TestDiffWithDirectories(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}, 0), diff.SummaryChan(&emptySummary))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -327,7 +328,7 @@ func TestDiffWithDirectories(t *testing.T) {
 		"h/i": "i2",
 	}, []string{"e"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}, s1.LatestModTime), diff.SummaryChan(s1))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -358,7 +359,7 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 
 	createDir(t, tmpDir, "e")
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}, 0), diff.SummaryChan(&emptySummary))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -381,7 +382,7 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 		"e/f": "f2",
 	}, []string{"b/c", "b/d"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}, s1.LatestModTime), diff.SummaryChan(s1))
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -398,5 +399,39 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 		"a":   entry("a1"),
 		"b/":  directory(),
 		"e/f": entry("f2"),
+	})
+}
+
+func TestDiffWithDifferentLatestModTimes(t *testing.T) {
+	tmpDir := writeTmpFiles(t, map[string]string{
+		"a": "a1",
+		"b": "b1",
+		"c": "c1",
+	})
+	defer os.RemoveAll(tmpDir)
+
+	_, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil, 0), diff.SummaryChan(&emptySummary))
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	updateTmpFiles(t, tmpDir, map[string]string{
+		"b": "b2",
+	}, []string{"c"})
+
+	future := time.Now().Add(100 * time.Hour).UnixNano()
+
+	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, nil, future), diff.SummaryChan(s1))
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	verifyUpdates(t, d2.Updates, map[string]pb.Update_Action{
+		"c": pb.Update_REMOVE,
+	})
+
+	verifyEntries(t, s2.Entries, map[string]expectedEntry{
+		"a": entry("a1"),
+		"b": entry("b1"),
 	})
 }
