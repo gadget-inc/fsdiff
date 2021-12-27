@@ -8,7 +8,7 @@ message Entry {
     string path = 1;
     uint32 mode = 2;
     int64 mod_time = 3;
-    bytes hash = 4;
+    int64 size = 4;
 }
 
 message Summary {

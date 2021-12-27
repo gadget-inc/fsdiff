@@ -1,104 +1,49 @@
 package diff
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/minio/sha256-simd"
-
 	"github.com/gadget-inc/fsdiff/pkg/pb"
+	"google.golang.org/protobuf/proto"
 )
 
-const (
-	fileLimit = 100_000
-	timeLimit = 250 * time.Millisecond
-)
-
-var (
-	currentPath = ""
-)
-
-func hashFile(path string) ([]byte, error) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	hash := sha256.Sum256(content)
-	return hash[:], nil
+type Message struct {
+	entry *pb.Entry
+	err   error
 }
 
-func hashLink(path string) ([]byte, error) {
-	target, err := os.Readlink(path)
-	if err != nil {
-		return nil, err
-	}
-
-	hash := sha256.Sum256([]byte(target))
-	return hash[:], nil
-}
-
-func hashEmptyDir() []byte {
-	hash := sha256.Sum256([]byte(""))
-	return hash[:]
-}
-
-type Entry struct {
-	path    string
-	mode    fs.FileMode
-	modTime int64
-	hash    []byte
-	err     error
-}
-
-func (e *Entry) toPb() *pb.Entry {
-	return &pb.Entry{
-		Path:    e.path,
-		Mode:    uint32(e.mode),
-		ModTime: e.modTime,
-		Hash:    e.hash,
-	}
-}
-
-func WalkChan(dir string, ignores []string, latestModTime int64) <-chan *Entry {
-	entryChan := make(chan *Entry, 100)
+func WalkChan(dir string, ignores []string) <-chan *Message {
+	channel := make(chan *Message, 100)
 
 	pushErr := func(err error) error {
-		entryChan <- &Entry{
+		channel <- &Message{
 			err: err,
 		}
 		return err
 	}
 
-	pushEmptyDir := func(path string, mode fs.FileMode) {
-		entryChan <- &Entry{
-			path: fmt.Sprintf("%s/", path),
-			mode: mode,
-			hash: hashEmptyDir(),
+	pushEmptyDir := func(entry *pb.Entry) {
+		channel <- &Message{
+			entry: entry,
 		}
 	}
 
 	go func() {
-		defer close(entryChan)
-		maybeEmptyDir := ""
-		emptyDirMode := fs.FileMode(0)
+		defer close(channel)
+
+		var maybeEmptyDir *pb.Entry
 
 		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
-			currentPath = path
-
-			if maybeEmptyDir != "" {
-				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir)) {
-					pushEmptyDir(maybeEmptyDir, emptyDirMode)
+			if maybeEmptyDir != nil {
+				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir.Path)) {
+					pushEmptyDir(maybeEmptyDir)
 				}
-				maybeEmptyDir = ""
-				emptyDirMode = fs.FileMode(0)
+				maybeEmptyDir = nil
 			}
 
 			if errors.Is(err, fs.ErrNotExist) {
@@ -133,64 +78,49 @@ func WalkChan(dir string, ignores []string, latestModTime int64) <-chan *Entry {
 			}
 
 			if entry.IsDir() {
-				maybeEmptyDir = relativePath
-				emptyDirMode = info.Mode()
+				maybeEmptyDir = &pb.Entry{
+					Path:    fmt.Sprintf("%s/", relativePath),
+					Mode:    uint32(info.Mode()),
+					ModTime: info.ModTime().UnixNano(),
+					Size:    info.Size(),
+				}
 				return nil
 			}
 
-			var hash []byte
-
-			if info.ModTime().UnixNano() >= latestModTime {
-				if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-					hash, err = hashLink(path)
-				} else {
-					hash, err = hashFile(path)
-				}
-				if errors.Is(err, fs.ErrNotExist) {
-					return nil
-				}
-				if err != nil {
-					return pushErr(fmt.Errorf("hash file: %w", err))
-				}
-			}
-
-			entryChan <- &Entry{
-				path:    relativePath,
-				mode:    info.Mode(),
-				modTime: info.ModTime().UnixNano(),
-				hash:    hash[:],
-				err:     nil,
+			channel <- &Message{
+				entry: &pb.Entry{
+					Path:    relativePath,
+					Mode:    uint32(info.Mode()),
+					ModTime: info.ModTime().UnixNano(),
+					Size:    info.Size(),
+				},
 			}
 
 			return nil
 		})
 
-		if maybeEmptyDir != "" {
-			pushEmptyDir(maybeEmptyDir, emptyDirMode)
+		if maybeEmptyDir != nil {
+			pushEmptyDir(maybeEmptyDir)
 		}
 	}()
 
-	return entryChan
+	return channel
 }
 
-func SummaryChan(summary *pb.Summary) <-chan *Entry {
-	entryChan := make(chan *Entry, 100)
+func SummaryChan(summary *pb.Summary) <-chan *Message {
+	channel := make(chan *Message, 100)
 
 	go func() {
-		defer close(entryChan)
+		defer close(channel)
 
 		for _, entry := range summary.Entries {
-			entryChan <- &Entry{
-				path:    entry.Path,
-				mode:    fs.FileMode(entry.Mode),
-				modTime: entry.ModTime,
-				hash:    entry.Hash,
-				err:     nil,
+			channel <- &Message{
+				entry: proto.Clone(entry).(*pb.Entry),
 			}
 		}
 	}()
 
-	return entryChan
+	return channel
 }
 
 func pathLessThan(left, right string) bool {
@@ -215,39 +145,7 @@ func pathLessThan(left, right string) bool {
 	return false
 }
 
-type channelInfo struct {
-	name    string
-	count   int
-	channel <-chan *Entry
-}
-
-func readFromChan(info *channelInfo) (*Entry, bool) {
-	if info.count > fileLimit {
-		return &Entry{
-			err: fmt.Errorf("maximum file count reached from: %v", info.name),
-		}, false
-	}
-
-	for i := 0; i < 3; i++ {
-		select {
-		case entry, open := <-info.channel:
-			info.count += 1
-			return entry, open
-		case <-time.After(timeLimit):
-			if info.name == "walk" {
-				log.Printf("single file timeout elapsed for %v from the filesystem channel", currentPath)
-			} else {
-				log.Printf("single file timeout elapsed from the %v channel", info.name)
-			}
-		}
-	}
-
-	return &Entry{
-		err: fmt.Errorf("timeout waiting for entry from: %v", info.name),
-	}, false
-}
-
-func latestModTime(summary *pb.Summary) int64 {
+func findLatestModTime(summary *pb.Summary) int64 {
 	latest := int64(0)
 
 	for _, entry := range summary.Entries {
@@ -259,84 +157,93 @@ func latestModTime(summary *pb.Summary) int64 {
 	return latest
 }
 
-func Diff(walkC, sumC <-chan *Entry) (*pb.Diff, *pb.Summary, error) {
+func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 	diff := &pb.Diff{}
 	summary := &pb.Summary{}
 
-	walk := channelInfo{name: "walk", channel: walkC}
-	sum := channelInfo{name: "sum", channel: sumC}
-
-	walkEntry, walkOpen := readFromChan(&walk)
-	sumEntry, sumOpen := readFromChan(&sum)
+	walkMessage, walkOpen := <-walk
+	sumMessage, sumOpen := <-sum
 
 	for {
-		if walkEntry != nil && walkEntry.err != nil {
-			return nil, nil, walkEntry.err
+		if walkMessage != nil && walkMessage.err != nil {
+			return nil, nil, walkMessage.err
 		}
-		if sumEntry != nil && sumEntry.err != nil {
-			return nil, nil, sumEntry.err
+		if sumMessage != nil && sumMessage.err != nil {
+			return nil, nil, sumMessage.err
 		}
 
 		if !walkOpen && !sumOpen {
-			summary.LatestModTime = latestModTime(summary)
+			summary.LatestModTime = findLatestModTime(summary)
+
+			// Without this short sleep it is possible for the following sequence to occur:
+			//   1. Diff() is run on a directory and the latest detected modTime is X
+			//   2. files within that directory are very quickly updated
+			//   3. Diff() is run again and no updates are detected
+			//
+			// This situation occurs because the modTime for the files updated in step 2
+			// will be equal to X even though they occured after the first Diff() completed
+			//
+			// It seems that if a file is modified multiple times in very quick succession
+			// (on the order of nanoseconds) the modTime for the file will not be updated
+			time.Sleep(10 * time.Millisecond)
+
 			return diff, summary, nil
 		}
 
 		if !walkOpen {
 			diff.Updates = append(diff.Updates, &pb.Update{
-				Path:   sumEntry.path,
+				Path:   sumMessage.entry.Path,
 				Action: pb.Update_REMOVE,
 			})
 
-			sumEntry, sumOpen = readFromChan(&sum)
+			sumMessage, sumOpen = <-sum
 			continue
 		}
 
 		if !sumOpen {
 			diff.Updates = append(diff.Updates, &pb.Update{
-				Path:   walkEntry.path,
+				Path:   walkMessage.entry.Path,
 				Action: pb.Update_ADD,
 			})
-			summary.Entries = append(summary.Entries, walkEntry.toPb())
+			summary.Entries = append(summary.Entries, walkMessage.entry)
 
-			walkEntry, walkOpen = readFromChan(&walk)
+			walkMessage, walkOpen = <-walk
 			continue
 		}
 
-		if walkEntry.path == sumEntry.path {
-			if walkEntry.mode != sumEntry.mode || (len(walkEntry.hash) > 0 && !bytes.Equal(walkEntry.hash, sumEntry.hash)) {
+		walkEntry := walkMessage.entry
+		sumEntry := sumMessage.entry
+
+		if walkEntry.Path == sumEntry.Path {
+			if walkEntry.Mode != sumEntry.Mode || walkEntry.ModTime != sumEntry.ModTime || walkEntry.Size != sumEntry.Size {
 				diff.Updates = append(diff.Updates, &pb.Update{
-					Path:   walkEntry.path,
+					Path:   walkEntry.Path,
 					Action: pb.Update_CHANGE,
 				})
 			}
 
-			if len(walkEntry.hash) == 0 {
-				walkEntry.hash = sumEntry.hash
-			}
+			summary.Entries = append(summary.Entries, walkEntry)
 
-			summary.Entries = append(summary.Entries, walkEntry.toPb())
-
-			walkEntry, walkOpen = readFromChan(&walk)
-			sumEntry, sumOpen = readFromChan(&sum)
+			walkMessage, walkOpen = <-walk
+			sumMessage, sumOpen = <-sum
 			continue
 		}
 
-		if pathLessThan(sumEntry.path, walkEntry.path) {
+		if pathLessThan(sumEntry.Path, walkEntry.Path) {
 			diff.Updates = append(diff.Updates, &pb.Update{
-				Path:   sumEntry.path,
+				Path:   sumEntry.Path,
 				Action: pb.Update_REMOVE,
 			})
 
-			sumEntry, sumOpen = readFromChan(&sum)
+			sumMessage, sumOpen = <-sum
 		} else {
 			diff.Updates = append(diff.Updates, &pb.Update{
-				Path:   walkEntry.path,
+				Path:   walkEntry.Path,
 				Action: pb.Update_ADD,
 			})
-			summary.Entries = append(summary.Entries, walkEntry.toPb())
+			summary.Entries = append(summary.Entries, walkEntry)
 
-			walkEntry, walkOpen = readFromChan(&walk)
+			walkMessage, walkOpen = <-walk
 		}
 	}
 }
