@@ -1,15 +1,17 @@
 package diff
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
-	"time"
+	"syscall"
 
 	"github.com/gadget-inc/fsdiff/pkg/pb"
-	"google.golang.org/protobuf/proto"
 )
 
 type Message struct {
@@ -17,7 +19,7 @@ type Message struct {
 	err   error
 }
 
-func WalkChan(dir string, ignores []string) <-chan *Message {
+func walkChan(dir string, ignores []string) <-chan *Message {
 	channel := make(chan *Message, 100)
 
 	pushErr := func(err error) error {
@@ -77,12 +79,20 @@ func WalkChan(dir string, ignores []string) <-chan *Message {
 				return pushErr(fmt.Errorf("stat file: %w", err))
 			}
 
+			// Fetch the inode if we can, otherwise fallback to setting it to 0
+			inode := uint64(0)
+			sysStat, ok := info.Sys().(*syscall.Stat_t)
+			if ok {
+				inode = sysStat.Ino
+			}
+
 			if entry.IsDir() {
 				maybeEmptyDir = &pb.Entry{
 					Path:    fmt.Sprintf("%s/", relativePath),
 					Mode:    uint32(info.Mode()),
 					ModTime: info.ModTime().UnixNano(),
-					Size:    info.Size(),
+					Size:    0,
+					Inode:   inode,
 				}
 				return nil
 			}
@@ -93,6 +103,7 @@ func WalkChan(dir string, ignores []string) <-chan *Message {
 					Mode:    uint32(info.Mode()),
 					ModTime: info.ModTime().UnixNano(),
 					Size:    info.Size(),
+					Inode:   inode,
 				},
 			}
 
@@ -107,7 +118,7 @@ func WalkChan(dir string, ignores []string) <-chan *Message {
 	return channel
 }
 
-func SummaryChan(summary *pb.Summary) <-chan *Message {
+func summaryChan(summary *pb.Summary) <-chan *Message {
 	channel := make(chan *Message, 100)
 
 	go func() {
@@ -115,7 +126,7 @@ func SummaryChan(summary *pb.Summary) <-chan *Message {
 
 		for _, entry := range summary.Entries {
 			channel <- &Message{
-				entry: proto.Clone(entry).(*pb.Entry),
+				entry: entry,
 			}
 		}
 	}()
@@ -157,12 +168,82 @@ func findLatestModTime(summary *pb.Summary) int64 {
 	return latest
 }
 
-func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
-	diff := &pb.Diff{}
-	summary := &pb.Summary{}
+func isEmptyDir(entry *pb.Entry) bool {
+	return strings.HasSuffix(entry.Path, "/")
+}
 
-	walkMessage, walkOpen := <-walk
-	sumMessage, sumOpen := <-sum
+func isLink(entry *pb.Entry) bool {
+	return os.FileMode(entry.Mode)&os.ModeSymlink == os.ModeSymlink
+}
+
+func hashFile(path string) ([]byte, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.Sum256(content)
+	return hash[:], nil
+}
+
+func hashLink(path string) ([]byte, error) {
+	target, err := os.Readlink(path)
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.Sum256([]byte(target))
+	return hash[:], nil
+}
+
+func hashEmptyDir() []byte {
+	hash := sha256.Sum256([]byte(""))
+	return hash[:]
+}
+
+func hashEntry(dir string, entry *pb.Entry) ([]byte, error) {
+	var hash []byte
+	var err error
+
+	path := filepath.Join(dir, entry.Path)
+
+	if isEmptyDir(entry) {
+		hash = hashEmptyDir()
+	} else if isLink(entry) {
+		hash, err = hashLink(path)
+	} else {
+		hash, err = hashFile(path)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error hashing path %v: %w", entry.Path, err)
+	}
+	return hash, nil
+}
+
+func hashLatestEntries(dir string, summary *pb.Summary) error {
+	for _, entry := range summary.Entries {
+		if entry.ModTime == summary.LatestModTime {
+			hash, err := hashEntry(dir, entry)
+			if err != nil {
+				return err
+			}
+			entry.Hash = hash
+		}
+	}
+
+	return nil
+}
+
+func Diff(dir string, ignores []string, previous *pb.Summary) (*pb.Diff, *pb.Summary, error) {
+	walkC := walkChan(dir, ignores)
+	sumC := summaryChan(previous)
+
+	diff := &pb.Diff{}
+	sum := &pb.Summary{}
+
+	walkMessage, walkOpen := <-walkC
+	sumMessage, sumOpen := <-sumC
 
 	for {
 		if walkMessage != nil && walkMessage.err != nil {
@@ -173,21 +254,14 @@ func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 		}
 
 		if !walkOpen && !sumOpen {
-			summary.LatestModTime = findLatestModTime(summary)
+			sum.LatestModTime = findLatestModTime(sum)
 
-			// Without this short sleep it is possible for the following sequence to occur:
-			//   1. Diff() is run on a directory and the latest detected modTime is X
-			//   2. files within that directory are very quickly updated
-			//   3. Diff() is run again and no updates are detected
-			//
-			// This situation occurs because the modTime for the files updated in step 2
-			// will be equal to X even though they occured after the first Diff() completed
-			//
-			// It seems that if a file is modified multiple times in very quick succession
-			// (on the order of nanoseconds) the modTime for the file will not be updated
-			time.Sleep(10 * time.Millisecond)
+			err := hashLatestEntries(dir, sum)
+			if err != nil {
+				return nil, nil, err
+			}
 
-			return diff, summary, nil
+			return diff, sum, nil
 		}
 
 		if !walkOpen {
@@ -196,7 +270,7 @@ func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 				Action: pb.Update_REMOVE,
 			})
 
-			sumMessage, sumOpen = <-sum
+			sumMessage, sumOpen = <-sumC
 			continue
 		}
 
@@ -205,9 +279,9 @@ func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 				Path:   walkMessage.entry.Path,
 				Action: pb.Update_ADD,
 			})
-			summary.Entries = append(summary.Entries, walkMessage.entry)
+			sum.Entries = append(sum.Entries, walkMessage.entry)
 
-			walkMessage, walkOpen = <-walk
+			walkMessage, walkOpen = <-walkC
 			continue
 		}
 
@@ -215,17 +289,32 @@ func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 		sumEntry := sumMessage.entry
 
 		if walkEntry.Path == sumEntry.Path {
-			if walkEntry.Mode != sumEntry.Mode || walkEntry.ModTime != sumEntry.ModTime || walkEntry.Size != sumEntry.Size {
+			if walkEntry.Mode != sumEntry.Mode || walkEntry.ModTime != sumEntry.ModTime || walkEntry.Size != sumEntry.Size || walkEntry.Inode != sumEntry.Inode {
 				diff.Updates = append(diff.Updates, &pb.Update{
 					Path:   walkEntry.Path,
 					Action: pb.Update_CHANGE,
 				})
+			} else if walkEntry.ModTime == previous.LatestModTime {
+				hash, err := hashEntry(dir, walkEntry)
+				if err != nil {
+					return nil, nil, err
+				}
+				if sumEntry.Hash == nil {
+					return nil, nil, fmt.Errorf("expected hash in summary for path %v but it was not recorded", sumEntry.Path)
+				}
+
+				if !bytes.Equal(hash, sumEntry.Hash) {
+					diff.Updates = append(diff.Updates, &pb.Update{
+						Path:   walkEntry.Path,
+						Action: pb.Update_CHANGE,
+					})
+				}
 			}
 
-			summary.Entries = append(summary.Entries, walkEntry)
+			sum.Entries = append(sum.Entries, walkEntry)
 
-			walkMessage, walkOpen = <-walk
-			sumMessage, sumOpen = <-sum
+			walkMessage, walkOpen = <-walkC
+			sumMessage, sumOpen = <-sumC
 			continue
 		}
 
@@ -235,15 +324,15 @@ func Diff(walk, sum <-chan *Message) (*pb.Diff, *pb.Summary, error) {
 				Action: pb.Update_REMOVE,
 			})
 
-			sumMessage, sumOpen = <-sum
+			sumMessage, sumOpen = <-sumC
 		} else {
 			diff.Updates = append(diff.Updates, &pb.Update{
 				Path:   walkEntry.Path,
 				Action: pb.Update_ADD,
 			})
-			summary.Entries = append(summary.Entries, walkEntry)
+			sum.Entries = append(sum.Entries, walkEntry)
 
-			walkMessage, walkOpen = <-walk
+			walkMessage, walkOpen = <-walkC
 		}
 	}
 }

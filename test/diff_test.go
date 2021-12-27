@@ -77,6 +77,13 @@ func createDir(t *testing.T, dir, name string) {
 	}
 }
 
+func moveFile(t *testing.T, dir, from, to string) {
+	err := os.Rename(filepath.Join(dir, from), filepath.Join(dir, to))
+	if err != nil {
+		t.Fatalf("mv %v %v: %v", filepath.Join(dir, from), filepath.Join(dir, to), err)
+	}
+}
+
 func verifyUpdates(t *testing.T, actual []*pb.Update, expected map[string]pb.Update_Action) {
 	if len(actual) != len(expected) {
 		t.Errorf("mismatch update count, expected %v, got: %v", len(expected), len(actual))
@@ -94,32 +101,28 @@ func verifyUpdates(t *testing.T, actual []*pb.Update, expected map[string]pb.Upd
 }
 
 type expectedEntry struct {
-	mode    uint32
-	size    int64
-	updated bool
+	mode uint32
+	size int64
 }
 
-func entry(content string, updated bool) expectedEntry {
+func entry(content string) expectedEntry {
 	return expectedEntry{
-		mode:    0o755,
-		size:    int64(len([]byte(content))),
-		updated: updated,
+		mode: 0o755,
+		size: int64(len([]byte(content))),
 	}
 }
 
-func link(source string, updated bool) expectedEntry {
+func link(source string) expectedEntry {
 	return expectedEntry{
-		mode:    0o777 + 0x8000000,
-		size:    0,
-		updated: updated,
+		mode: 0o777 + 0x8000000,
+		size: 0,
 	}
 }
 
-func directory(updated bool) expectedEntry {
+func directory() expectedEntry {
 	return expectedEntry{
-		mode:    0o755 + 0x80000000,
-		size:    4096,
-		updated: updated,
+		mode: 0o755 + 0x80000000,
+		size: 0,
 	}
 }
 
@@ -136,12 +139,6 @@ func verifyEntries(t *testing.T, latestModTime int64, actual []*pb.Entry, expect
 			if entry.Size != exp.size {
 				t.Errorf("mismatch entry size for %v, expected: %v, got: %v", entry.Path, exp.size, entry.Size)
 			}
-			if exp.updated && entry.ModTime < latestModTime {
-				t.Errorf("mod time before last summary for updated entry %v", entry.Path)
-			}
-			if !exp.updated && entry.ModTime > latestModTime {
-				t.Errorf("mod time after last summary for unchanged entry %v", entry.Path)
-			}
 		} else {
 			t.Errorf("unexpected summary entry for %v", entry.Path)
 		}
@@ -156,7 +153,7 @@ func TestDiffWithoutSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -168,9 +165,9 @@ func TestDiffWithoutSummary(t *testing.T) {
 	})
 
 	verifyEntries(t, 0, s1.Entries, map[string]expectedEntry{
-		"a": entry("a1", true),
-		"b": entry("b1", true),
-		"c": entry("c1", true),
+		"a": entry("a1"),
+		"b": entry("b1"),
+		"c": entry("c1"),
 	})
 }
 
@@ -182,7 +179,7 @@ func TestDiffWithSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	_, s1, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(&emptySummary))
+	_, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -192,7 +189,7 @@ func TestDiffWithSummary(t *testing.T) {
 		"d": "d2",
 	}, []string{"c"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, nil), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -204,9 +201,9 @@ func TestDiffWithSummary(t *testing.T) {
 	})
 
 	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
-		"a": entry("a1", false),
-		"b": entry("b2", true),
-		"d": entry("d2", true),
+		"a": entry("a1"),
+		"b": entry("b2"),
+		"d": entry("d2"),
 	})
 }
 
@@ -219,7 +216,7 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(tmpDir, []string{".ignore_1", ".ignore_2"}, &emptySummary)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -230,8 +227,8 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 
 	verifyEntries(t, 0, s1.Entries, map[string]expectedEntry{
-		"a": entry("a1", true),
-		"b": entry("b1", true),
+		"a": entry("a1"),
+		"b": entry("b1"),
 	})
 
 	updateTmpFiles(t, tmpDir, map[string]string{
@@ -239,7 +236,7 @@ func TestDiffWithIgnores(t *testing.T) {
 		".ignore_2": "new ignore",
 	}, []string{})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{".ignore_1", ".ignore_2"}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(tmpDir, []string{".ignore_1", ".ignore_2"}, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -249,8 +246,8 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 
 	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
-		"a": entry("a1", false),
-		"b": entry("b2", true),
+		"a": entry("a1"),
+		"b": entry("b2"),
 	})
 }
 
@@ -310,7 +307,7 @@ func TestDiffWithDirectories(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -323,10 +320,10 @@ func TestDiffWithDirectories(t *testing.T) {
 	})
 
 	verifyEntries(t, 0, s1.Entries, map[string]expectedEntry{
-		"a":   entry("a1", true),
-		"b/c": entry("c1", true),
-		"b/d": entry("d1", true),
-		"e/f": entry("f1", true),
+		"a":   entry("a1"),
+		"b/c": entry("c1"),
+		"b/d": entry("d1"),
+		"e/f": entry("f1"),
 	})
 
 	updateTmpFiles(t, tmpDir, map[string]string{
@@ -335,7 +332,7 @@ func TestDiffWithDirectories(t *testing.T) {
 		"h/i": "i2",
 	}, []string{"e"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -348,11 +345,11 @@ func TestDiffWithDirectories(t *testing.T) {
 	})
 
 	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
-		"a":   entry("a1", false),
-		"b/c": entry("c2", true),
-		"b/d": entry("d1", false),
-		"b/g": entry("g2", true),
-		"h/i": entry("i2", true),
+		"a":   entry("a1"),
+		"b/c": entry("c2"),
+		"b/d": entry("d1"),
+		"b/g": entry("g2"),
+		"h/i": entry("i2"),
 	})
 }
 
@@ -366,7 +363,7 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 
 	createDir(t, tmpDir, "e")
 
-	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(&emptySummary))
+	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -379,17 +376,17 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 	})
 
 	verifyEntries(t, 0, s1.Entries, map[string]expectedEntry{
-		"a":   entry("a1", true),
-		"b/c": entry("c1", true),
-		"b/d": entry("d1", true),
-		"e/":  directory(true),
+		"a":   entry("a1"),
+		"b/c": entry("c1"),
+		"b/d": entry("d1"),
+		"e/":  directory(),
 	})
 
 	updateTmpFiles(t, tmpDir, map[string]string{
 		"e/f": "f2",
 	}, []string{"b/c", "b/d"})
 
-	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(s1))
+	d2, s2, err := diff.Diff(tmpDir, []string{}, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -403,8 +400,37 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 	})
 
 	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
-		"a":   entry("a1", false),
-		"b/":  directory(true),
-		"e/f": entry("f2", true),
+		"a":   entry("a1"),
+		"b/":  directory(),
+		"e/f": entry("f2"),
+	})
+}
+
+func TestDiffWithFileMove(t *testing.T) {
+	tmpDir := writeTmpFiles(t, map[string]string{
+		"a": "a1",
+		"b": "b1",
+	})
+	defer os.RemoveAll(tmpDir)
+
+	_, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	moveFile(t, tmpDir, "a", "b")
+
+	d2, s2, err := diff.Diff(tmpDir, []string{}, s1)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	verifyUpdates(t, d2.Updates, map[string]pb.Update_Action{
+		"a": pb.Update_REMOVE,
+		"b": pb.Update_CHANGE,
+	})
+
+	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
+		"b": entry("a1"),
 	})
 }

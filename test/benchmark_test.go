@@ -22,7 +22,7 @@ func BenchmarkSimpleInitialDiff(b *testing.B) {
 	dir := getFixturesDir("simple")
 
 	for n := 0; n < b.N; n++ {
-		_, _, err := diff.Diff(diff.WalkChan(dir, []string{}), diff.SummaryChan(&pb.Summary{}))
+		_, _, err := diff.Diff(dir, nil, &pb.Summary{})
 		if err != nil {
 			b.Fatalf("failed to run diff: %v", err)
 		}
@@ -33,7 +33,7 @@ func BenchmarkReactInitialDiff(b *testing.B) {
 	dir := getFixturesDir("example-react-app")
 
 	for n := 0; n < b.N; n++ {
-		_, _, err := diff.Diff(diff.WalkChan(dir, []string{}), diff.SummaryChan(&pb.Summary{}))
+		_, _, err := diff.Diff(dir, nil, &pb.Summary{})
 		if err != nil {
 			b.Fatalf("failed to run diff: %v", err)
 		}
@@ -42,7 +42,7 @@ func BenchmarkReactInitialDiff(b *testing.B) {
 
 func BenchmarkReactChangedDiff(b *testing.B) {
 	initialDir := getFixturesDir("example-react-app")
-	_, summary, err := diff.Diff(diff.WalkChan(initialDir, []string{}), diff.SummaryChan(&pb.Summary{}))
+	_, summary, err := diff.Diff(initialDir, nil, &pb.Summary{})
 	if err != nil {
 		b.Fatalf("failed to run diff: %v", err)
 	}
@@ -50,7 +50,7 @@ func BenchmarkReactChangedDiff(b *testing.B) {
 	changedDir := getFixturesDir("example-react-app-libraries")
 
 	for n := 0; n < b.N; n++ {
-		_, _, err := diff.Diff(diff.WalkChan(changedDir, []string{}), diff.SummaryChan(summary))
+		_, _, err := diff.Diff(changedDir, nil, summary)
 		if err != nil {
 			b.Fatalf("failed to run diff: %v", err)
 		}
