@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1640639733629,
+  "lastUpdate": 1640810616222,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -1636,6 +1636,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 430447835,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "96ebb23ed2a40cbda51159d0352377efdb982de7",
+          "message": "Hash only the latest files",
+          "timestamp": "2021-12-29T21:39:52+01:00",
+          "tree_id": "a253b0682d8418f398f6ae478af9170208783e6d",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/96ebb23ed2a40cbda51159d0352377efdb982de7"
+        },
+        "date": 1640810615723,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 247538,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 368339342,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 523110678,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
