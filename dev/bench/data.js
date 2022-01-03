@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1640876521802,
+  "lastUpdate": 1641224185662,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -1888,6 +1888,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 539995980,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2a4c1fcd316c36b84fc1b1828e33371573bd98c5",
+          "message": "Merge pull request #10 from gadget-inc/hash_only_latest\n\nHash only latest",
+          "timestamp": "2022-01-03T16:34:36+01:00",
+          "tree_id": "2a65bb1ae3d98683f052cfe3a53afba6c50a98e0",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/2a4c1fcd316c36b84fc1b1828e33371573bd98c5"
+        },
+        "date": 1641224185125,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 233622,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 288455855,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 431830084,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
