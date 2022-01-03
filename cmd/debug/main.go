@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
@@ -46,7 +45,7 @@ func main() {
 
 		for i := 0; i < args.sample && i < len(summary.Entries); i++ {
 			entry := summary.Entries[i]
-			fmt.Printf("%v: path:%v mode:%v hash:%v...\n", i, entry.Path, entry.Mode, hex.EncodeToString(entry.Hash)[:12])
+			fmt.Printf("%v: path:%v mode:%v modTime:%v size:%v\n", i, entry.Path, entry.Mode, entry.ModTime, entry.Size)
 		}
 	}
 

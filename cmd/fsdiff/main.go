@@ -74,7 +74,7 @@ func main() {
 		log.Fatalf("read summary from disk: %v", err)
 	}
 
-	d, s, err := diff.Diff(diff.WalkChan(args.dir, args.ignores, summary.LatestModTime), diff.SummaryChan(summary))
+	d, s, err := diff.Diff(args.dir, args.ignores, summary)
 	if err != nil {
 		log.Fatalf("execute diff: %v", err)
 	}
