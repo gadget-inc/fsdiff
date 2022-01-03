@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641224185662,
+  "lastUpdate": 1641224243505,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -1930,6 +1930,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 431830084,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4906fd3fcd7468aeb42fc9ea3e2ca974d944ca34",
+          "message": "Merge pull request #9 from gadget-inc/mtime_optimization\n\nSkip hashing files if the mod time is before the last summary",
+          "timestamp": "2021-12-09T11:45:57-05:00",
+          "tree_id": "1853ca5b13265900ebe40b42774b5fffdef524f8",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/4906fd3fcd7468aeb42fc9ea3e2ca974d944ca34"
+        },
+        "date": 1641224242974,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 347257,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 2007422797,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 1208055740,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
