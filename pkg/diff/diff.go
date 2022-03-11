@@ -14,6 +14,10 @@ import (
 	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
+func isLink(mode uint32) bool {
+	return os.FileMode(mode)&os.ModeSymlink == os.ModeSymlink
+}
+
 type Message struct {
 	entry *pb.Entry
 	err   error
@@ -89,7 +93,7 @@ func walkChan(dir string, ignores []string) <-chan *Message {
 			if entry.IsDir() {
 				maybeEmptyDir = &pb.Entry{
 					Path:    fmt.Sprintf("%s/", relativePath),
-					Mode:    uint32(info.Mode()),
+					Mode:    uint32(os.ModeDir),
 					ModTime: info.ModTime().UnixNano(),
 					Size:    0,
 					Inode:   inode,
@@ -97,12 +101,21 @@ func walkChan(dir string, ignores []string) <-chan *Message {
 				return nil
 			}
 
+			mode := uint32(info.Mode())
+			size := info.Size()
+
+			// Normalizing required as this is not consistent across MacOS and Linux
+			if isLink(mode) {
+				mode = uint32(os.ModeSymlink)
+				size = 0
+			}
+
 			channel <- &Message{
 				entry: &pb.Entry{
 					Path:    relativePath,
-					Mode:    uint32(info.Mode()),
+					Mode:    mode,
 					ModTime: info.ModTime().UnixNano(),
-					Size:    info.Size(),
+					Size:    size,
 					Inode:   inode,
 				},
 			}
@@ -172,10 +185,6 @@ func isEmptyDir(entry *pb.Entry) bool {
 	return strings.HasSuffix(entry.Path, "/")
 }
 
-func isLink(entry *pb.Entry) bool {
-	return os.FileMode(entry.Mode)&os.ModeSymlink == os.ModeSymlink
-}
-
 func hashFile(path string) ([]byte, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -209,7 +218,7 @@ func hashEntry(dir string, entry *pb.Entry) ([]byte, error) {
 
 	if isEmptyDir(entry) {
 		hash = hashEmptyDir()
-	} else if isLink(entry) {
+	} else if isLink(entry.Mode) {
 		hash, err = hashLink(path)
 	} else {
 		hash, err = hashFile(path)

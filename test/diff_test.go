@@ -114,14 +114,14 @@ func entry(content string) expectedEntry {
 
 func link(source string) expectedEntry {
 	return expectedEntry{
-		mode: 0o777 + 0x8000000,
+		mode: uint32(os.ModeSymlink),
 		size: 0,
 	}
 }
 
 func directory() expectedEntry {
 	return expectedEntry{
-		mode: 0o755 + 0x80000000,
+		mode: uint32(os.ModeDir),
 		size: 0,
 	}
 }
@@ -251,52 +251,50 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 }
 
-// FIXME: Currently broken on MacOS, symlinks do not have the same Mode as on Linux
-//
-// func TestDiffWithSymlinks(t *testing.T) {
-// 	tmpDir := writeTmpFiles(t, map[string]string{
-// 		"a": "a1",
-// 		"b": "b1",
-// 	})
-// 	defer os.RemoveAll(tmpDir)
+func TestDiffWithSymlinks(t *testing.T) {
+	tmpDir := writeTmpFiles(t, map[string]string{
+		"a": "a1",
+		"b": "b1",
+	})
+	defer os.RemoveAll(tmpDir)
 
-// 	createLink(t, tmpDir, "b", "c")
+	createLink(t, tmpDir, "b", "c")
 
-// 	d1, s1, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(&emptySummary))
-// 	if err != nil {
-// 		t.Fatalf("failed to run diff: %v", err)
-// 	}
+	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
 
-// 	verifyUpdates(t, d1.Updates, map[string]pb.Update_Action{
-// 		"a": pb.Update_ADD,
-// 		"b": pb.Update_ADD,
-// 		"c": pb.Update_ADD,
-// 	})
+	verifyUpdates(t, d1.Updates, map[string]pb.Update_Action{
+		"a": pb.Update_ADD,
+		"b": pb.Update_ADD,
+		"c": pb.Update_ADD,
+	})
 
-// 	verifyEntries(t, s1.Entries, map[string]expectedEntry{
-// 		"a": entry("a1"),
-// 		"b": entry("b1"),
-// 		"c": link(filepath.Join(tmpDir, "b")),
-// 	})
+	verifyEntries(t, 0, s1.Entries, map[string]expectedEntry{
+		"a": entry("a1"),
+		"b": entry("b1"),
+		"c": link(filepath.Join(tmpDir, "b")),
+	})
 
-// 	updateTmpFiles(t, tmpDir, map[string]string{}, []string{"c"})
-// 	createLink(t, tmpDir, "a", "b")
+	updateTmpFiles(t, tmpDir, map[string]string{}, []string{"c"})
+	createLink(t, tmpDir, "a", "b")
 
-// 	d2, s2, err := diff.Diff(diff.WalkChan(tmpDir, []string{}), diff.SummaryChan(s1))
-// 	if err != nil {
-// 		t.Fatalf("failed to run diff: %v", err)
-// 	}
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
 
-// 	verifyUpdates(t, d2.Updates, map[string]pb.Update_Action{
-// 		"b": pb.Update_CHANGE,
-// 		"c": pb.Update_REMOVE,
-// 	})
+	verifyUpdates(t, d2.Updates, map[string]pb.Update_Action{
+		"b": pb.Update_CHANGE,
+		"c": pb.Update_REMOVE,
+	})
 
-// 	verifyEntries(t, s2.Entries, map[string]expectedEntry{
-// 		"a": entry("a1"),
-// 		"b": link(filepath.Join(tmpDir, "a")),
-// 	})
-// }
+	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
+		"a": entry("a1"),
+		"b": link(filepath.Join(tmpDir, "a")),
+	})
+}
 
 func TestDiffWithDirectories(t *testing.T) {
 	tmpDir := writeTmpFiles(t, map[string]string{
