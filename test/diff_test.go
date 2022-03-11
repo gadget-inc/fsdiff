@@ -395,7 +395,6 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 		"b/":  pb.Update_ADD,
 		"b/c": pb.Update_REMOVE,
 		"b/d": pb.Update_REMOVE,
-		"e/":  pb.Update_REMOVE,
 		"e/f": pb.Update_ADD,
 	})
 

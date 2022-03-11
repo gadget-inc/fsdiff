@@ -235,6 +235,23 @@ func hashLatestEntries(dir string, summary *pb.Summary) error {
 	return nil
 }
 
+// Used to prune the following case from the diff list
+// i:   pb.Update{ Action: pb.Update_REMOVE, Path: "empty/dir/" }
+// i+1: pb.Update{ Action: pb.Update_ADD,    Path: "empty/dir/a" }
+//
+// We do not want to delete an empty directory that we're also adding files to
+func removeOverlappingUpdates(updates []*pb.Update) []*pb.Update {
+	for i := len(updates) - 1; i >= 0; i-- {
+		update := updates[i]
+		if strings.HasSuffix(update.Path, "/") && update.Action == pb.Update_REMOVE {
+			if len(updates) > i+1 && strings.HasPrefix(updates[i+1].Path, update.Path) {
+				updates = append(updates[:i], updates[i+1:]...)
+			}
+		}
+	}
+	return updates
+}
+
 func Diff(dir string, ignores []string, previous *pb.Summary) (*pb.Diff, *pb.Summary, error) {
 	walkC := walkChan(dir, ignores)
 	sumC := summaryChan(previous)
@@ -260,6 +277,8 @@ func Diff(dir string, ignores []string, previous *pb.Summary) (*pb.Diff, *pb.Sum
 			if err != nil {
 				return nil, nil, err
 			}
+
+			diff.Updates = removeOverlappingUpdates(diff.Updates)
 
 			return diff, sum, nil
 		}
