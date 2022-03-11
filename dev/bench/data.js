@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641224945389,
+  "lastUpdate": 1646967954109,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2014,6 +2014,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 439743374,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "1662f861d103a70904bfd15b43857ba809680e3d",
+          "message": "Normalize symlinks and empty dir for mac and linux",
+          "timestamp": "2022-03-10T22:04:01-05:00",
+          "tree_id": "d9f28e09fcc7578fa73c2786366c36d976f3b759",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/1662f861d103a70904bfd15b43857ba809680e3d"
+        },
+        "date": 1646967953483,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 215056,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 298544091,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 435590161,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
