@@ -6,5 +6,7 @@ diff.s2
 sum.zst
 diff.zst
 .direnv
+.DS_STORE
+.idea
 
 test/fixtures/*/node_modules
