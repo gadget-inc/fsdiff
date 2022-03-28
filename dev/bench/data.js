@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1646968171859,
+  "lastUpdate": 1648475612008,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2098,6 +2098,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 457428790,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Cote",
+            "username": "scott-rc"
+          },
+          "committer": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Cote",
+            "username": "scott-rc"
+          },
+          "distinct": true,
+          "id": "20fd99cf6f1c5c569a7bd65f3bcd02db380a4b73",
+          "message": "Added aarch64-darwin to flake.nix",
+          "timestamp": "2022-03-28T09:51:22-04:00",
+          "tree_id": "b939e26750345e68d0f65f82de735d538dd059cf",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/20fd99cf6f1c5c569a7bd65f3bcd02db380a4b73"
+        },
+        "date": 1648475611463,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 249585,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 357353913,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 523847328,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
