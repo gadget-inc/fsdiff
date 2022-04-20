@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648475612008,
+  "lastUpdate": 1650426791241,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2140,6 +2140,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 523847328,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "01a68e01983cb241a4b99ee9c247e0ec12c3d6ea",
+          "message": "Handle missing file while hashing",
+          "timestamp": "2022-04-19T23:51:23-04:00",
+          "tree_id": "9c53ddd32028b990a357a0f6a554ca59624c3caf",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/01a68e01983cb241a4b99ee9c247e0ec12c3d6ea"
+        },
+        "date": 1650426790776,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 316842,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 302498346,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 448647206,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
