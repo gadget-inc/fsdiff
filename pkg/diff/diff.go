@@ -230,16 +230,43 @@ func hashEntry(dir string, entry *pb.Entry) ([]byte, error) {
 	return hash, nil
 }
 
-func hashLatestEntries(dir string, summary *pb.Summary) error {
+// Only store the hash for files with a mod time equal to the latest mod time in the summary
+// This is slow to calcualte, so we only save it for files that we won't be able to rely on their mod time to know if they changed
+// In the case where the file to hash no longer exists, mark the file as removed
+func hashLatestEntries(dir string, summary *pb.Summary, diff *pb.Diff) error {
+	markAsRemoved := func(path string) {
+		for _, update := range diff.Updates {
+			if update.Path == path {
+				update.Action = pb.Update_REMOVE
+				return
+			}
+		}
+	}
+
+	idx := 0
 	for _, entry := range summary.Entries {
 		if entry.ModTime == summary.LatestModTime {
 			hash, err := hashEntry(dir, entry)
+			if errors.Is(err, fs.ErrNotExist) {
+				markAsRemoved(entry.Path)
+				continue
+			}
 			if err != nil {
 				return err
 			}
+
 			entry.Hash = hash
 		}
+
+		summary.Entries[idx] = entry
+		idx++
 	}
+
+	// Remove any dangling elements on the end of the slice
+	for j := idx; j < len(summary.Entries); j++ {
+		summary.Entries[j] = nil
+	}
+	summary.Entries = summary.Entries[:idx]
 
 	return nil
 }
@@ -281,13 +308,12 @@ func Diff(dir string, ignores []string, previous *pb.Summary) (*pb.Diff, *pb.Sum
 
 		if !walkOpen && !sumOpen {
 			sum.LatestModTime = findLatestModTime(sum)
+			diff.Updates = removeOverlappingUpdates(diff.Updates)
 
-			err := hashLatestEntries(dir, sum)
+			err := hashLatestEntries(dir, sum, diff)
 			if err != nil {
 				return nil, nil, err
 			}
-
-			diff.Updates = removeOverlappingUpdates(diff.Updates)
 
 			return diff, sum, nil
 		}
