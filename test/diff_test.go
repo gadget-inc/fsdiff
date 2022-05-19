@@ -10,10 +10,6 @@ import (
 	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
-var (
-	emptySummary = pb.Summary{}
-)
-
 func writeTmpFiles(t *testing.T, files map[string]string) string {
 	dir, err := os.MkdirTemp("", "dateilager_tests_")
 	if err != nil {
@@ -153,7 +149,7 @@ func TestDiffWithoutSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	d1, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -179,7 +175,7 @@ func TestDiffWithSummary(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	_, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	_, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -216,7 +212,7 @@ func TestDiffWithIgnores(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(tmpDir, []string{".ignore_1", ".ignore_2"}, &emptySummary)
+	d1, s1, err := diff.Diff(tmpDir, []string{".ignore_1", ".ignore_2"}, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -260,7 +256,7 @@ func TestDiffWithSymlinks(t *testing.T) {
 
 	createLink(t, tmpDir, "b", "c")
 
-	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	d1, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -305,7 +301,7 @@ func TestDiffWithDirectories(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	d1, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -361,7 +357,7 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 
 	createDir(t, tmpDir, "e")
 
-	d1, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	d1, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -410,7 +406,7 @@ func TestDiffWithFileMove(t *testing.T) {
 	})
 	defer os.RemoveAll(tmpDir)
 
-	_, s1, err := diff.Diff(tmpDir, nil, &emptySummary)
+	_, s1, err := diff.Diff(tmpDir, nil, nil)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}

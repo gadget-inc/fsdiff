@@ -134,6 +134,10 @@ func walkChan(dir string, ignores []string) <-chan *Message {
 func summaryChan(summary *pb.Summary) <-chan *Message {
 	channel := make(chan *Message, 100)
 
+	if summary == nil {
+		summary = &pb.Summary{}
+	}
+
 	go func() {
 		defer close(channel)
 
