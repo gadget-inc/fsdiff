@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666834396821,
+  "lastUpdate": 1666834413984,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2392,6 +2392,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 450681634,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "committer": {
+            "email": "alex.louis.angelini@gmail.com",
+            "name": "Alex Angelini",
+            "username": "angelini"
+          },
+          "distinct": true,
+          "id": "6bbb290e667109c52616e45cbcc91fd1be334126",
+          "message": "Fix empty directory detection with common prefixes",
+          "timestamp": "2022-10-26T21:31:12-04:00",
+          "tree_id": "aacb255f0b33103139821b63f4f957f7775de4af",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/6bbb290e667109c52616e45cbcc91fd1be334126"
+        },
+        "date": 1666834413092,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 232432,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 311520427,
+            "unit": "ns/op",
+            "extra": "10 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 466672438,
             "unit": "ns/op",
             "extra": "10 times\n2 procs"
           }
