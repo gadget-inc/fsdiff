@@ -14,6 +14,10 @@ import (
 	"github.com/gadget-inc/fsdiff/pkg/pb"
 )
 
+const (
+	Separator = string(filepath.Separator)
+)
+
 func isLink(mode uint32) bool {
 	return os.FileMode(mode)&os.ModeSymlink == os.ModeSymlink
 }
@@ -46,7 +50,7 @@ func walkChan(dir string, ignores []string) <-chan *Message {
 
 		filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
 			if maybeEmptyDir != nil {
-				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir.Path)) {
+				if !strings.HasPrefix(path, filepath.Join(dir, maybeEmptyDir.Path)+Separator) {
 					pushEmptyDir(maybeEmptyDir)
 				}
 				maybeEmptyDir = nil
@@ -92,7 +96,7 @@ func walkChan(dir string, ignores []string) <-chan *Message {
 
 			if entry.IsDir() {
 				maybeEmptyDir = &pb.Entry{
-					Path:    fmt.Sprintf("%s/", relativePath),
+					Path:    fmt.Sprintf("%s%s", relativePath, Separator),
 					Mode:    uint32(os.ModeDir),
 					ModTime: info.ModTime().UnixNano(),
 					Size:    0,
@@ -152,8 +156,8 @@ func summaryChan(summary *pb.Summary) <-chan *Message {
 }
 
 func pathLessThan(left, right string) bool {
-	leftSplits := strings.Split(left, "/")
-	rightSplits := strings.Split(right, "/")
+	leftSplits := strings.Split(left, Separator)
+	rightSplits := strings.Split(right, Separator)
 
 	for idx, leftSplit := range leftSplits {
 		if idx >= len(rightSplits) {
@@ -185,8 +189,8 @@ func findLatestModTime(summary *pb.Summary) int64 {
 	return latest
 }
 
-func isEmptyDir(entry *pb.Entry) bool {
-	return strings.HasSuffix(entry.Path, "/")
+func isEmptyDir(path string) bool {
+	return strings.HasSuffix(path, Separator)
 }
 
 func hashFile(path string) ([]byte, error) {
@@ -220,7 +224,7 @@ func hashEntry(dir string, entry *pb.Entry) ([]byte, error) {
 
 	path := filepath.Join(dir, entry.Path)
 
-	if isEmptyDir(entry) {
+	if isEmptyDir(entry.Path) {
 		hash = hashEmptyDir()
 	} else if isLink(entry.Mode) {
 		hash, err = hashLink(path)
@@ -283,7 +287,7 @@ func hashLatestEntries(dir string, summary *pb.Summary, diff *pb.Diff) error {
 func removeOverlappingUpdates(updates []*pb.Update) []*pb.Update {
 	for i := len(updates) - 1; i >= 0; i-- {
 		update := updates[i]
-		if strings.HasSuffix(update.Path, "/") && update.Action == pb.Update_REMOVE {
+		if isEmptyDir(update.Path) && update.Action == pb.Update_REMOVE {
 			if len(updates) > i+1 && strings.HasPrefix(updates[i+1].Path, update.Path) {
 				updates = append(updates[:i], updates[i+1:]...)
 			}

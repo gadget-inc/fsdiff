@@ -230,7 +230,7 @@ func TestDiffWithIgnores(t *testing.T) {
 	updateTmpFiles(t, tmpDir, map[string]string{
 		"b":         "b2",
 		".ignore_2": "new ignore",
-	}, []string{})
+	}, nil)
 
 	d2, s2, err := diff.Diff(tmpDir, []string{".ignore_1", ".ignore_2"}, s1)
 	if err != nil {
@@ -380,7 +380,7 @@ func TestDiffWithEmptyDirectories(t *testing.T) {
 		"e/f": "f2",
 	}, []string{"b/c", "b/d"})
 
-	d2, s2, err := diff.Diff(tmpDir, []string{}, s1)
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -413,7 +413,7 @@ func TestDiffWithFileMove(t *testing.T) {
 
 	moveFile(t, tmpDir, "a", "b")
 
-	d2, s2, err := diff.Diff(tmpDir, []string{}, s1)
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
 	if err != nil {
 		t.Fatalf("failed to run diff: %v", err)
 	}
@@ -425,5 +425,35 @@ func TestDiffWithFileMove(t *testing.T) {
 
 	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
 		"b": entry("a1"),
+	})
+}
+
+func TestDiffEmptyDirWithMatchingPrefix(t *testing.T) {
+	tmpDir := writeTmpFiles(t, map[string]string{})
+	defer os.RemoveAll(tmpDir)
+
+	createDir(t, tmpDir, "abc")
+
+	_, s1, err := diff.Diff(tmpDir, nil, nil)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	updateTmpFiles(t, tmpDir, map[string]string{
+		"abcdef": "a1",
+	}, nil)
+
+	d2, s2, err := diff.Diff(tmpDir, nil, s1)
+	if err != nil {
+		t.Fatalf("failed to run diff: %v", err)
+	}
+
+	verifyUpdates(t, d2.Updates, map[string]pb.Update_Action{
+		"abcdef": pb.Update_ADD,
+	})
+
+	verifyEntries(t, s1.LatestModTime, s2.Entries, map[string]expectedEntry{
+		"abc/":   directory(),
+		"abcdef": entry("a1"),
 	})
 }
