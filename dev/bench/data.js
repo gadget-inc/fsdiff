@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1747928459287,
+  "lastUpdate": 1747928485598,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2686,6 +2686,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 475219396,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Côté",
+            "username": "scott-rc"
+          },
+          "committer": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Côté",
+            "username": "scott-rc"
+          },
+          "distinct": true,
+          "id": "018b3a0dafa34e9296e1620d10bcf3ef349bbd03",
+          "message": "Update .goreleaser.yml to v2",
+          "timestamp": "2025-05-22T11:39:51-04:00",
+          "tree_id": "0d374779cc6f98b18464a8663fd71338e7259f58",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/018b3a0dafa34e9296e1620d10bcf3ef349bbd03"
+        },
+        "date": 1747928484634,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 158092,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 312051565,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 466825770,
             "unit": "ns/op",
             "extra": "10 times\n4 procs"
           }
