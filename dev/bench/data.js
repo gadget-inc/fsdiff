@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1747927698835,
+  "lastUpdate": 1747928259600,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2560,6 +2560,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 499105577,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Côté",
+            "username": "scott-rc"
+          },
+          "committer": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Côté",
+            "username": "scott-rc"
+          },
+          "distinct": true,
+          "id": "fc3af50f99124e097deb261599910daa95e989e2",
+          "message": "Fix release workflow",
+          "timestamp": "2025-05-22T11:36:24-04:00",
+          "tree_id": "eaf2a313d1270f958444f477dc7189a3a8619c1b",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/fc3af50f99124e097deb261599910daa95e989e2"
+        },
+        "date": 1747928259072,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 155030,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 318767744,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 473009416,
             "unit": "ns/op",
             "extra": "10 times\n4 procs"
           }
