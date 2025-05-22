@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1747927566557,
+  "lastUpdate": 1747927698835,
   "repoUrl": "https://github.com/gadget-inc/fsdiff",
   "entries": {
     "fsdiff Benchmark": [
@@ -2518,6 +2518,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkReactChangedDiff",
             "value": 507042551,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "scott.cote@hey.com",
+            "name": "Scott Côté",
+            "username": "scott-rc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2b878a98c5b463ca065f9cc60e3f8d7c826e6818",
+          "message": "Merge pull request #14 from gadget-inc/sc/update-github-workflows",
+          "timestamp": "2025-05-22T11:24:53-04:00",
+          "tree_id": "0cfa0c02be9b38c722068d0b51d7ceaadde3787e",
+          "url": "https://github.com/gadget-inc/fsdiff/commit/2b878a98c5b463ca065f9cc60e3f8d7c826e6818"
+        },
+        "date": 1747927697897,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSimpleInitialDiff",
+            "value": 164076,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactInitialDiff",
+            "value": 342437231,
+            "unit": "ns/op",
+            "extra": "10 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReactChangedDiff",
+            "value": 499105577,
             "unit": "ns/op",
             "extra": "10 times\n4 procs"
           }
