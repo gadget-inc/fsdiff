@@ -15,6 +15,7 @@ func writeBytes(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	s2Writer := s2.NewWriter(file)
 	defer s2Writer.Close()
